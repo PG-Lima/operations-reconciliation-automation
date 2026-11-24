@@ -1,14 +1,20 @@
 # Business Rules — Reconciliation
 
-This document records the rules extracted from the original operational workflow and implemented in the first domain milestone. It is intentionally independent of the original source code and uses no real business data.
+This document records the rules extracted from the original operational workflow and implemented in the domain and Excel input milestones. It is intentionally independent of the original source code and uses no real business data.
 
 ## Input and eligibility
 
-1. Only records whose status is `LIBERADO` participate in consolidation.
-2. Blank contract names and summary rows such as `nan` or `Total` are ignored.
-3. A released row with an un-normalizable company name or an invalid quantity must stop processing rather than silently alter totals.
-4. The analysis period begins on day 1 of the cutoff month and ends on the actual cutoff date.
-5. The release date determines the month. A separate load-month field does not override it.
+1. The movement reader accepts `.xls`, `.xlsx`, and `.xlsm`, as well as HTML-based Excel exports saved with an `.xls` extension.
+2. The movement workbook must contain `Contrato`, `Data da Liberação`, `Situação do Arquivo`, and `Quantidade`; `Tipo da Carga` is optional.
+3. The reference is read from the `Referencia_Principal` worksheet, with row 5 as the default header row. Columns beginning with `Empresa`, `Quantidade consolidada`, and `Dias de liberação observados` are required; `Carteira` is optional.
+4. Reference competence is extracted from the month/year in a `Quantidade consolidada (mmm/YYYY)` header when recognized.
+5. Header matching ignores accents, letter case, and surrounding whitespace; duplicate headers after normalization are ambiguous and stop the import.
+6. Movement quantities provided as text may use Brazilian numeric notation, for example `1.234,50`.
+7. Only records whose status is `LIBERADO` participate in consolidation.
+8. Blank contract names and summary rows such as `nan` or `Total` are ignored.
+9. A released row with an un-normalizable company name, invalid quantity, or invalid release date must stop processing rather than silently alter totals.
+10. The analysis period begins on day 1 of the cutoff month and ends on the actual cutoff date.
+11. The release date determines the month. A separate load-month field does not override it.
 
 ## Consolidation
 

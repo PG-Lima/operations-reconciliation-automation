@@ -28,6 +28,14 @@ class ReferenceCompany:
 
 
 @dataclass(frozen=True, slots=True)
+class ReferenceWorkbook:
+    """Validated companies and the optional competence parsed from a reference workbook."""
+
+    companies: tuple[ReferenceCompany, ...]
+    competence: date | None
+
+
+@dataclass(frozen=True, slots=True)
 class ReleaseRecord:
     """One row from an operational movement export."""
 

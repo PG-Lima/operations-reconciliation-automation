@@ -6,9 +6,13 @@ The project is being rebuilt as an independent, layered Python application. The 
 
 - **Domain:** immutable typed models and business classifications.
 - **Services:** pure normalization, consolidation, and comparison rules.
-- **Adapters (next milestone):** Excel readers/writers, local synced-folder storage, and a local mock work-board gateway.
+- **Adapters:** movement and reference Excel input readers are implemented. Report generation, local output-folder storage, and the local mock work-board gateway remain planned.
 - **Application (next milestone):** daily run and monthly-close orchestration.
 - **CLI (next milestone):** explicit commands for demo, daily comparison, and monthly close.
+
+## Excel input adapter
+
+The `adapters/excel_reader.py` module converts external files into typed domain models. The movement reader accepts `.xls`, `.xlsx`, `.xlsm`, and HTML-based Excel exports detected from their content; the reference reader expects the `Referencia_Principal` worksheet and uses row 5 as its default header row. Headers are resolved by normalized names or the documented prefixes. The domain layer does not depend on Pandas and does not know source filenames or worksheet names.
 
 ## Planned boundaries
 

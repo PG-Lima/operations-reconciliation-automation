@@ -11,10 +11,14 @@ A Python demonstration project for reconciling monthly operational releases agai
 ## Current scope
 
 - Normalize company names and scheduled calendar days.
+- Read and validate movement and reference Excel workbooks.
 - Aggregate `LIBERADO` movements by company and release date.
 - Compare monthly quantities with a reference while preserving companies with no movement.
 - Classify companies as `Aguardando`, `Menor`, `Igual`, `Maior`, or `Não pagou`.
 - Keep companies absent from the reference in a separate result.
+- Read movement exports in `.xls`, `.xlsx`, and `.xlsm` formats, including HTML-based Excel exports saved as `.xls`.
+- Read the reference workbook from the configured sheet and header row, including its monthly competence when present.
+- Validate required columns, dates, quantities, and duplicate company keys before processing.
 - Build an Excel report and a local mock work-board workflow in later milestones.
 - Support month closing, reference archiving, and promotion through a controlled, testable workflow in later milestones.
 
@@ -50,18 +54,28 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-The current milestone implements and tests the core domain rules. File discovery, Excel adapters, reporting, local board simulation, and monthly orchestration are planned next.
+The current milestone implements the core domain rules and the Excel input adapters for movement and reference workbooks. File discovery, Excel report generation, local board simulation, and monthly orchestration are planned next.
 
 ## Project structure
 
 ```text
 src/operations_reconciliation/
+├── adapters/     # Excel input readers
 ├── domain/       # Typed domain models
 └── services/     # Normalization, consolidation, comparison
 
-tests/unit/       # Fast tests for business rules
+tests/unit/       # Fast tests for rules and file validation
+tests/integration/ # Excel-to-domain workflow tests
 docs/             # Architecture and business-rule documentation
 ```
+
+## Excel input contracts
+
+The movement reader accepts `.xls`, `.xlsx`, and `.xlsm` files. It also detects HTML tables exported by Excel and saved with an `.xls` extension. Required movement headers are `Contrato`, `Data da Liberação`, `Situação do Arquivo`, and `Quantidade`; `Tipo da Carga` is optional. Header matching ignores accents, case, and surrounding whitespace. Only `LIBERADO` rows are converted; blank contracts and summary rows such as `Total` are skipped.
+
+The reference reader expects the `Referencia_Principal` worksheet with its header on row 5 by default. It recognizes `Empresa`, `Quantidade consolidada (mmm/YYYY)`, and `Dias de liberação observados` columns by prefix; `Carteira` is optional. The competence is read from the month/year in the quantity header.
+
+Invalid release quantities, invalid release dates, ambiguous headers, and duplicate companies after normalization stop the import with an explicit error. Numeric strings in Brazilian format such as `1.234,50` are supported for movement quantities.
 
 ## Safety and data boundaries
 
@@ -83,6 +97,8 @@ Projeto demonstrativo em Python para conciliar movimentações operacionais mens
 - Comparar quantidades mensais com uma referência, preservando empresas sem movimentação.
 - Classificar empresas como `Aguardando`, `Menor`, `Igual`, `Maior` ou `Não pagou`.
 - Separar empresas que não constam na referência.
+- Ler e validar planilhas de movimentações `.xls`, `.xlsx`, `.xlsm` e HTML do Excel salvo como `.xls`.
+- Ler a referência mensal na aba `Referencia_Principal`, com competência extraída do cabeçalho quando disponível.
 - Construir relatório Excel e fluxo de quadro de tarefas simulado nas próximas etapas.
 - Implementar fechamento mensal, arquivamento e promoção da referência em um fluxo controlado e testável nas próximas etapas.
 
@@ -118,7 +134,15 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-Esta primeira etapa implementa e testa as regras centrais do domínio. Descoberta de arquivos, adaptadores Excel, relatórios, simulação local do quadro e orquestração mensal serão desenvolvidos a seguir.
+Esta etapa implementa e testa as regras centrais do domínio e a leitura das planilhas de movimentações e referência. Descoberta automática de arquivos, geração de relatórios Excel, simulação local do quadro e orquestração mensal serão desenvolvidos a seguir.
+
+## Contratos de entrada Excel
+
+O leitor de movimentações aceita arquivos `.xls`, `.xlsx` e `.xlsm`. Também detecta tabelas HTML exportadas pelo Excel e salvas com extensão `.xls`. Os cabeçalhos obrigatórios são `Contrato`, `Data da Liberação`, `Situação do Arquivo` e `Quantidade`; `Tipo da Carga` é opcional. A identificação dos cabeçalhos ignora acentos, maiúsculas/minúsculas e espaços externos. Somente registros `LIBERADO` são convertidos; contratos vazios e linhas de resumo como `Total` são ignorados.
+
+O leitor da referência espera a aba `Referencia_Principal`, com cabeçalho na linha 5 por padrão. Reconhece por prefixo as colunas `Empresa`, `Quantidade consolidada (mmm/AAAA)` e `Dias de liberação observados`; `Carteira` é opcional. A competência é extraída do mês/ano informado no cabeçalho da quantidade consolidada.
+
+Quantidades de liberação inválidas, datas de liberação inválidas, cabeçalhos ambíguos e empresas duplicadas após normalização interrompem a importação com erro explícito. Strings numéricas no padrão brasileiro, como `1.234,50`, são aceitas para quantidades de movimentação.
 
 ## Segurança e limites dos dados
 
