@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -53,8 +52,6 @@ _CLASSIFICATION_SHEETS = (
 
 _HEADER_FILL = PatternFill(fill_type="solid", fgColor="243B53")
 _HEADER_FONT = Font(color="FFFFFF", bold=True)
-_TITLE_FONT = Font(size=14, bold=True, color="243B53")
-_THIN_BOTTOM = PatternFill(fill_type=None)
 
 
 def _format_header(worksheet) -> None:
