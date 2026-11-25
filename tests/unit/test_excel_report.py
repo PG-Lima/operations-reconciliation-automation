@@ -4,13 +4,13 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
+from operations_reconciliation.adapters.excel_report import write_comparison_report
 from operations_reconciliation.domain.models import (
     Classification,
     CompanyComparison,
     CompanyMovement,
     ComparisonReport,
 )
-from operations_reconciliation.adapters.excel_report import write_comparison_report
 
 
 def _comparison(
@@ -171,5 +171,5 @@ def test_new_companies_worksheet_contains_unreferenced_movements(
 
 
 def test_rejects_output_paths_that_are_not_xlsx(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="\.xlsx"):
+    with pytest.raises(ValueError, match=r"\.xlsx"):
         write_comparison_report(_report(), tmp_path / "comparison.csv")
