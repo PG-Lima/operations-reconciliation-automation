@@ -1,6 +1,6 @@
 # Business Rules — Reconciliation
 
-This document records the rules extracted from the original operational workflow and implemented in the domain and Excel input milestones. It is intentionally independent of the original source code and uses no real business data.
+This document records the rules extracted from the original operational workflow and implemented in the domain, Excel input, and report output milestones. It is intentionally independent of the original source code and uses no real business data.
 
 ## Input and eligibility
 
@@ -36,6 +36,15 @@ This document records the rules extracted from the original operational workflow
    - `Não pagou`: no release was recorded.
    - `Menor`: some quantity was released, but the total is below expected.
 7. A quantity above the reference does not override `Aguardando` before the scheduled deadline.
+
+## Excel report
+
+1. The report is generated from an already-computed `ComparisonReport`; the output adapter does not rerun comparison rules.
+2. The workbook is saved locally to the caller-supplied `.xlsx` path. The destination directory is created when needed.
+3. The `Resumo` worksheet contains company counts, released-quantity totals, and counts by classification.
+4. The `Aguardando`, `Menor`, `Igual`, `Maior`, and `Não pagou` worksheets contain only companies in their respective classifications.
+5. The `Novas empresas` worksheet lists movements from companies absent from the reference; these companies are not compared against an expected quantity.
+6. Report generation does not modify input workbooks or access external services.
 
 ## Monthly close — planned workflow
 
