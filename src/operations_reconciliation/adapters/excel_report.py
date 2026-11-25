@@ -67,12 +67,7 @@ def _format_header(worksheet) -> None:
 def _fit_columns(worksheet, minimum: int = 12, maximum: int = 48) -> None:
     for column in worksheet.columns:
         cells = tuple(column)
-        if not cells:
-            continue
-        longest = max(
-            (len(str(cell.value)) for cell in cells if cell.value is not None),
-            default=minimum,
-        )
+        longest = max(len(str(cell.value)) for cell in cells if cell.value is not None)
         width = min(max(longest + 2, minimum), maximum)
         worksheet.column_dimensions[get_column_letter(cells[0].column)].width = width
 
@@ -171,7 +166,6 @@ def _write_summary_sheet(workbook: Workbook, report: ComparisonReport) -> None:
         worksheet.append((label, value))
 
     _format_header(worksheet)
-    worksheet.auto_filter.ref = "A1:B1"
     worksheet.column_dimensions["A"].width = 42
     worksheet.column_dimensions["B"].width = 20
     for row in worksheet.iter_rows(min_row=2, min_col=2, max_col=2):
