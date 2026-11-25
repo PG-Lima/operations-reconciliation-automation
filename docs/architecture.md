@@ -6,13 +6,17 @@ O projeto está sendo reconstruído como uma aplicação Python independente e o
 
 - **Domínio:** modelos tipados imutáveis e classificações de negócio.
 - **Serviços:** regras puras de normalização, consolidação e comparação.
-- **Adaptadores:** o leitor de movimentações e a leitura da referência Excel já estão implementados. Geração de relatórios, armazenamento em pasta local de saída e gateway de quadro simulado permanecem para as próximas etapas.
+- **Adaptadores:** os leitores de movimentações e referência Excel e o gerador de relatório Excel local estão implementados. O gateway de quadro simulado permanece para uma etapa futura.
 - **Aplicação (próxima etapa):** orquestração da execução diária e do fechamento mensal.
 - **CLI (próxima etapa):** comandos explícitos para demonstração, comparação diária e fechamento mensal.
 
 ## Adaptador de entrada Excel
 
 O módulo `adapters/excel_reader.py` converte arquivos externos em modelos tipados do domínio. O leitor de movimentações aceita `.xls`, `.xlsx`, `.xlsm` e exportações HTML do Excel identificadas pelo conteúdo; o leitor da referência espera a aba `Referencia_Principal` e cabeçalho na linha 5 por padrão. Cabeçalhos são localizados por nomes normalizados ou prefixos definidos no contrato de dados. A camada de domínio não depende do Pandas nem conhece nomes de arquivos ou abas.
+
+## Adaptador de saída do relatório Excel
+
+O módulo `adapters/excel_report.py` serializa um `ComparisonReport` já calculado em um arquivo `.xlsx` no caminho local informado pelo chamador. Ele cria a pasta de destino quando necessário e gera as abas `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`. O adaptador não recalcula classificações, não modifica as planilhas de entrada e não acessa serviços externos.
 
 ## Limites planejados
 
