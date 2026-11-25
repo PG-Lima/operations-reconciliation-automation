@@ -1,6 +1,6 @@
 # Regras de Negócio — Conciliação
 
-Este documento registra as regras extraídas do fluxo operacional original e implementadas nas etapas de domínio e leitura Excel. A nova implementação é independente e não utiliza dados reais de nenhuma empresa.
+Este documento registra as regras extraídas do fluxo operacional original e implementadas nas etapas de domínio, leitura Excel e geração do relatório. A nova implementação é independente e não utiliza dados reais de nenhuma empresa.
 
 ## Entrada e elegibilidade
 
@@ -36,6 +36,15 @@ Este documento registra as regras extraídas do fluxo operacional original e imp
    - `Não pagou`: nenhuma liberação registrada.
    - `Menor`: houve liberação, mas o total ficou abaixo do esperado.
 7. Uma quantidade acima da referência não substitui o status `Aguardando` antes do prazo previsto.
+
+## Relatório Excel
+
+1. O relatório é gerado a partir de um `ComparisonReport` já calculado; o adaptador de saída não executa novamente as regras de comparação.
+2. O arquivo é salvo localmente no caminho `.xlsx` informado pelo chamador. A pasta de destino é criada quando necessário.
+3. A aba `Resumo` apresenta contagens de empresas, totais liberados e quantidades por classificação.
+4. As abas `Aguardando`, `Menor`, `Igual`, `Maior` e `Não pagou` contêm somente as empresas da respectiva classificação.
+5. A aba `Novas empresas` apresenta movimentações de empresas ausentes da referência, sem compará-las com uma quantidade esperada.
+6. A geração do relatório não modifica as planilhas de entrada nem acessa serviços externos.
 
 ## Fechamento mensal — fluxo planejado
 
