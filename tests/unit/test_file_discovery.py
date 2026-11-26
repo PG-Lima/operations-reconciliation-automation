@@ -212,8 +212,8 @@ def test_rejects_multiple_reference_workbooks_for_the_same_competence(
 ) -> None:
     first = tmp_path / "reference-a.xlsx"
     second = tmp_path / "reference-b.xlsx"
-    first.touch()
-    second.touch()
+    _create_candidate(first)
+    _create_candidate(second)
 
     references = {
         first: ReferenceWorkbook((), date(2026, 11, 1)),
@@ -256,7 +256,7 @@ def test_reports_invalid_reference_workbook_with_its_filename(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     corrupt = tmp_path / "broken-reference.xlsx"
-    corrupt.touch()
+    _create_candidate(corrupt)
 
     def fail_to_read(path: Path) -> ReferenceWorkbook:
         raise ValueError("missing required columns")
