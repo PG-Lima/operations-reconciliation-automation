@@ -16,6 +16,35 @@ Este documento registra as regras extraídas do fluxo operacional original e imp
 10. O período analisado começa no primeiro dia do mês da data de corte e termina na própria data de corte.
 11. A competência é determinada pela Data da Liberação. Um campo separado de mês da carga não a substitui.
 
+## Descoberta de arquivos Excel
+
+1. A busca ocorre somente na pasta local informada, sem percorrer subpastas.
+2. Arquivos ocultos, temporários do Excel iniciados por `~# Regras de Negócio — Conciliação
+
+Este documento registra as regras extraídas do fluxo operacional original e implementadas nas etapas de domínio, leitura Excel e geração do relatório. A nova implementação é independente e não utiliza dados reais de nenhuma empresa.
+
+## Entrada e elegibilidade
+
+1. O leitor de movimentações aceita `.xls`, `.xlsx` e `.xlsm`, além de HTML do Excel salvo com extensão `.xls`.
+2. A planilha de movimentações precisa conter `Contrato`, `Data da Liberação`, `Situação do Arquivo` e `Quantidade`; `Tipo da Carga` é opcional.
+3. A referência é lida da aba `Referencia_Principal`, com cabeçalho na linha 5 por padrão. São obrigatórias as colunas iniciadas por `Empresa`, `Quantidade consolidada` e `Dias de liberação observados`; `Carteira` é opcional.
+4. A competência da referência é extraída do mês/ano no cabeçalho `Quantidade consolidada (mmm/AAAA)`, quando reconhecido.
+5. Os nomes de cabeçalhos são comparados sem diferenciar acentos, caixa ou espaços externos; cabeçalhos duplicados após essa normalização são ambíguos e interrompem a leitura.
+6. Quantidades de movimentação em texto podem usar o padrão brasileiro, por exemplo `1.234,50`.
+7. Somente registros com situação `LIBERADO` participam da consolidação.
+8. Contratos sem nome e linhas de resumo como `nan` ou `Total` são ignorados.
+9. Um registro `LIBERADO` com nome de empresa impossível de normalizar, quantidade inválida ou data de liberação inválida deve interromper o processamento, em vez de alterar os totais silenciosamente.
+10. O período analisado começa no primeiro dia do mês da data de corte e termina na própria data de corte.
+11. A competência é determinada pela Data da Liberação. Um campo separado de mês da carga não a substitui.
+
+, vazios e com extensão não suportada são ignorados.
+3. Uma planilha candidata não vazia que não puder ser lida ou validada interrompe a descoberta com erro que identifica o arquivo.
+4. A descoberta de movimentações considera somente registros `LIBERADO` cuja Data da Liberação pertença à competência solicitada.
+5. A planilha de movimentações selecionada é a que contém a maior Data da Liberação dentro da competência. A data de modificação do arquivo é utilizada somente quando as maiores datas de liberação empatam.
+6. Se duas ou mais planilhas de movimentações empatarem tanto na maior Data da Liberação quanto na data de modificação, a descoberta é interrompida por ambiguidade.
+7. A descoberta da referência exige que a competência extraída do cabeçalho corresponda ao mês solicitado e que exista exatamente uma planilha correspondente. Ausência ou duplicidade interrompe o processo.
+8. A descoberta não move, renomeia, sobrescreve ou modifica os arquivos de origem e não acessa serviços remotos.
+
 ## Consolidação
 
 1. A identidade da empresa é normalizada removendo acentos, pontuação, diferenças entre maiúsculas/minúsculas e espaços repetidos.

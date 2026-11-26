@@ -20,6 +20,7 @@ A Python demonstration project for reconciling monthly operational releases agai
 - Read the reference workbook from the configured sheet and header row, including its monthly competence when present.
 - Validate required columns, dates, quantities, and duplicate company keys before processing.
 - Generate a local Excel report with seven worksheets: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas`.
+- Discover movement and reference workbooks from explicitly configured local folders using deterministic selection rules.
 - Keep the local mock work-board workflow and monthly orchestration for later milestones.
 - Support month closing, reference archiving, and promotion through a controlled, testable workflow in later milestones.
 
@@ -55,7 +56,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-The current milestone implements the core domain rules, Excel input adapters, and a local Excel report output adapter. File discovery, local board simulation, and monthly orchestration remain planned.
+The current milestone implements the core domain rules, Excel input and report adapters, and deterministic discovery of local movement and reference workbooks. Local board simulation and monthly orchestration remain planned.
 
 ## Project structure
 
@@ -101,6 +102,7 @@ Projeto demonstrativo em Python para conciliar movimentações operacionais mens
 - Ler e validar planilhas de movimentações `.xls`, `.xlsx`, `.xlsm` e HTML do Excel salvo como `.xls`.
 - Ler a referência mensal na aba `Referencia_Principal`, com competência extraída do cabeçalho quando disponível.
 - Gerar localmente um relatório Excel com sete abas: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`.
+- Descobrir planilhas de movimentação e referência em pastas locais configuradas explicitamente, com critérios determinísticos de seleção.
 - Manter o quadro de tarefas simulado e a orquestração mensal para etapas futuras.
 - Implementar fechamento mensal, arquivamento e promoção da referência em um fluxo controlado e testável nas próximas etapas.
 
@@ -136,7 +138,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-Esta etapa implementa e testa as regras centrais do domínio, a leitura das planilhas Excel e um adaptador de saída para gerar o relatório local. Descoberta automática de arquivos, simulação local do quadro e orquestração mensal permanecem planejadas.
+Esta etapa implementa e testa as regras centrais do domínio, os adaptadores de entrada Excel, a geração local de relatórios e a descoberta determinística de planilhas de movimentação e referência. A simulação local do quadro e a orquestração mensal permanecem planejadas.
 
 ## Contratos de entrada Excel
 
