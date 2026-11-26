@@ -19,7 +19,8 @@ A Python demonstration project for reconciling monthly operational releases agai
 - Read movement exports in `.xls`, `.xlsx`, and `.xlsm` formats, including HTML-based Excel exports saved as `.xls`.
 - Read the reference workbook from the configured sheet and header row, including its monthly competence when present.
 - Validate required columns, dates, quantities, and duplicate company keys before processing.
-- Build an Excel report and a local mock work-board workflow in later milestones.
+- Generate a local Excel report with seven worksheets: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas`.
+- Keep the local mock work-board workflow and monthly orchestration for later milestones.
 - Support month closing, reference archiving, and promotion through a controlled, testable workflow in later milestones.
 
 ## Requirements
@@ -54,13 +55,13 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-The current milestone implements the core domain rules and the Excel input adapters for movement and reference workbooks. File discovery, Excel report generation, local board simulation, and monthly orchestration are planned next.
+The current milestone implements the core domain rules, Excel input adapters, and a local Excel report output adapter. File discovery, local board simulation, and monthly orchestration remain planned.
 
 ## Project structure
 
 ```text
 src/operations_reconciliation/
-├── adapters/     # Excel input readers
+├── adapters/     # Excel input and output adapters
 ├── domain/       # Typed domain models
 └── services/     # Normalization, consolidation, comparison
 
@@ -99,7 +100,8 @@ Projeto demonstrativo em Python para conciliar movimentações operacionais mens
 - Separar empresas que não constam na referência.
 - Ler e validar planilhas de movimentações `.xls`, `.xlsx`, `.xlsm` e HTML do Excel salvo como `.xls`.
 - Ler a referência mensal na aba `Referencia_Principal`, com competência extraída do cabeçalho quando disponível.
-- Construir relatório Excel e fluxo de quadro de tarefas simulado nas próximas etapas.
+- Gerar localmente um relatório Excel com sete abas: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`.
+- Manter o quadro de tarefas simulado e a orquestração mensal para etapas futuras.
 - Implementar fechamento mensal, arquivamento e promoção da referência em um fluxo controlado e testável nas próximas etapas.
 
 ## Requisitos
@@ -134,7 +136,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-Esta etapa implementa e testa as regras centrais do domínio e a leitura das planilhas de movimentações e referência. Descoberta automática de arquivos, geração de relatórios Excel, simulação local do quadro e orquestração mensal serão desenvolvidos a seguir.
+Esta etapa implementa e testa as regras centrais do domínio, a leitura das planilhas Excel e um adaptador de saída para gerar o relatório local. Descoberta automática de arquivos, simulação local do quadro e orquestração mensal permanecem planejadas.
 
 ## Contratos de entrada Excel
 
