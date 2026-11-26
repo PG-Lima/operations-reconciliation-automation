@@ -16,6 +16,35 @@ This document records the rules extracted from the original operational workflow
 10. The analysis period begins on day 1 of the cutoff month and ends on the actual cutoff date.
 11. The release date determines the month. A separate load-month field does not override it.
 
+## Excel file discovery
+
+1. Discovery scans only the supplied local directory; it does not recurse into subdirectories.
+2. Hidden files, Excel lock files beginning with `~# Business Rules — Reconciliation
+
+This document records the rules extracted from the original operational workflow and implemented in the domain, Excel input, and report output milestones. It is intentionally independent of the original source code and uses no real business data.
+
+## Input and eligibility
+
+1. The movement reader accepts `.xls`, `.xlsx`, and `.xlsm`, as well as HTML-based Excel exports saved with an `.xls` extension.
+2. The movement workbook must contain `Contrato`, `Data da Liberação`, `Situação do Arquivo`, and `Quantidade`; `Tipo da Carga` is optional.
+3. The reference is read from the `Referencia_Principal` worksheet, with row 5 as the default header row. Columns beginning with `Empresa`, `Quantidade consolidada`, and `Dias de liberação observados` are required; `Carteira` is optional.
+4. Reference competence is extracted from the month/year in a `Quantidade consolidada (mmm/YYYY)` header when recognized.
+5. Header matching ignores accents, letter case, and surrounding whitespace; duplicate headers after normalization are ambiguous and stop the import.
+6. Movement quantities provided as text may use Brazilian numeric notation, for example `1.234,50`.
+7. Only records whose status is `LIBERADO` participate in consolidation.
+8. Blank contract names and summary rows such as `nan` or `Total` are ignored.
+9. A released row with an un-normalizable company name, invalid quantity, or invalid release date must stop processing rather than silently alter totals.
+10. The analysis period begins on day 1 of the cutoff month and ends on the actual cutoff date.
+11. The release date determines the month. A separate load-month field does not override it.
+
+, empty files, and unsupported extensions are ignored.
+3. A non-empty candidate workbook that cannot be read or validated stops discovery with an error identifying the file.
+4. Movement discovery considers only `LIBERADO` records whose Release Date belongs to the requested competence.
+5. The selected movement workbook is the one containing the latest Release Date within the competence. File modification time is used only when the latest release dates tie.
+6. If two or more movement workbooks tie on both the latest Release Date and file modification time, discovery stops with an ambiguity error.
+7. Reference discovery requires the competence extracted from the header to match the requested month and exactly one matching workbook to exist. Missing or duplicate matches stop processing.
+8. Discovery does not move, rename, overwrite, or modify source files and does not access remote services.
+
 ## Consolidation
 
 1. Company identity is normalized by removing accents, punctuation, case differences, and repeated whitespace.
