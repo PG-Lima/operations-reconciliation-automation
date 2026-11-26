@@ -1,5 +1,5 @@
-from datetime import date
 import os
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -12,6 +12,10 @@ def _movement(release_date: date) -> tuple[ReleaseRecord, ...]:
     return (ReleaseRecord("Acme", release_date, 10.0),)
 
 
+def _create_candidate(path: Path) -> None:
+    path.write_bytes(b"synthetic workbook placeholder")
+
+
 def _set_modified(path: Path, timestamp: float) -> None:
     os.utime(path, (timestamp, timestamp))
 
@@ -22,8 +26,8 @@ def test_discovers_movement_with_latest_release_date_before_modification_time(
 ) -> None:
     older_release = tmp_path / "older-release.xlsx"
     latest_release = tmp_path / "latest-release.xlsx"
-    older_release.touch()
-    latest_release.touch()
+    _create_candidate(older_release)
+    _create_candidate(latest_release)
     _set_modified(older_release, 300)
     _set_modified(latest_release, 100)
 
@@ -51,8 +55,8 @@ def test_uses_modification_time_only_when_latest_release_dates_match(
 ) -> None:
     older_file = tmp_path / "older-file.xlsx"
     newer_file = tmp_path / "newer-file.xlsx"
-    older_file.touch()
-    newer_file.touch()
+    _create_candidate(older_file)
+    _create_candidate(newer_file)
     _set_modified(older_file, 100)
     _set_modified(newer_file, 200)
 
@@ -80,8 +84,8 @@ def test_rejects_ambiguous_movement_candidates_when_both_criteria_match(
 ) -> None:
     first = tmp_path / "first.xlsx"
     second = tmp_path / "second.xlsx"
-    first.touch()
-    second.touch()
+    _create_candidate(first)
+    _create_candidate(second)
     _set_modified(first, 200)
     _set_modified(second, 200)
 
@@ -95,7 +99,7 @@ def test_rejects_ambiguous_movement_candidates_when_both_criteria_match(
         lambda path: records[path],
     )
 
-    with pytest.raises(ValueError, match="ambiguous.*first.xlsx.*second.xlsx"):
+    with pytest.raises(ValueError, match=r"(?i)ambiguous.*first.xlsx.*second.xlsx"):
         file_discovery.discover_movement_workbook(
             tmp_path,
             date(2026, 11, 1),
@@ -107,6 +111,7 @@ def test_ignores_other_months_empty_files_and_non_candidate_paths(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     other_month = tmp_path / "october.xlsx"
+    previous_year = tmp_path / "previous-year.xlsx"
     empty = tmp_path / "empty.xls"
     hidden = tmp_path / ".hidden.xlsx"
     lock_file = tmp_path / "~$locked.xlsx"
@@ -115,14 +120,13 @@ def test_ignores_other_months_empty_files_and_non_candidate_paths(
     subdirectory.mkdir()
     nested_workbook = subdirectory / "movement.xlsx"
 
-    for path in (other_month, empty, hidden, lock_file, unsupported, nested_workbook):
-        if path.name not in {"nested", "movement.xlsx"}:
-            path.touch()
-    nested_workbook.touch()
+    for path in (other_month, previous_year, hidden, lock_file, unsupported, nested_workbook):
+        _create_candidate(path)
+    empty.touch()
 
     records = {
         other_month: _movement(date(2026, 10, 31)),
-        empty: (),
+        previous_year: _movement(date(2025, 11, 30)),
     }
     monkeypatch.setattr(
         file_discovery,
@@ -142,7 +146,7 @@ def test_reports_invalid_movement_workbook_with_its_filename(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     corrupt = tmp_path / "corrupt.xlsx"
-    corrupt.touch()
+    _create_candidate(corrupt)
 
     def fail_to_read(path: Path) -> tuple[ReleaseRecord, ...]:
         raise ValueError("invalid workbook")
@@ -181,8 +185,8 @@ def test_discovers_reference_with_matching_competence(
 ) -> None:
     current = tmp_path / "reference-current.xlsx"
     previous = tmp_path / "reference-previous.xlsm"
-    current.touch()
-    previous.touch()
+    _create_candidate(current)
+    _create_candidate(previous)
 
     references = {
         current: ReferenceWorkbook((), date(2026, 11, 1)),
@@ -221,7 +225,7 @@ def test_rejects_multiple_reference_workbooks_for_the_same_competence(
         lambda path: references[path],
     )
 
-    with pytest.raises(ValueError, match="multiple reference workbooks.*reference-a.xlsx.*reference-b.xlsx"):
+    with pytest.raises(ValueError, match=r"(?i)multiple reference workbooks.*reference-a.xlsx.*reference-b.xlsx"):
         file_discovery.discover_reference_workbook(
             tmp_path,
             date(2026, 11, 1),
@@ -233,7 +237,7 @@ def test_rejects_when_no_reference_matches_the_competence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reference = tmp_path / "reference.xlsx"
-    reference.touch()
+    _create_candidate(reference)
     monkeypatch.setattr(
         file_discovery,
         "read_reference_workbook",
