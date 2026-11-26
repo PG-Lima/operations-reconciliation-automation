@@ -6,6 +6,28 @@ The project is being rebuilt as an independent, layered Python application. The 
 
 - **Domain:** immutable typed models and business classifications.
 - **Services:** pure normalization, consolidation, and comparison rules.
+- **Adapters:** Excel input, local file discovery, and report output are implemented. The local mock work-board gateway remains planned.
+- **Application (next milestone):** daily run and monthly-close orchestration.
+- **CLI (next milestone):** explicit commands for demo, daily comparison, and monthly close.
+
+## Excel input adapter
+
+The `adapters/excel_reader.py` module converts external files into typed domain models. The movement reader accepts `.xls`, `.xlsx`, `.xlsm`, and HTML-based Excel exports detected from their content; the reference reader expects the `Referencia_Principal` worksheet and uses row 5 as its default header row. Headers are resolved by normalized names or the documented prefixes. The domain layer does not depend on Pandas and does not know source filenames or worksheet names.
+
+## Excel report output adapter
+
+The `adapters/excel_report.py` module serializes an already-computed `ComparisonReport` to an `.xlsx` file at the caller-supplied local path. It creates the destination directory when needed and writes the `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas` worksheets. The adapter does not recalculate classifications, modify input workbooks, or access external services.
+
+## Excel file discovery
+
+The `adapters/file_discovery.py` module scans only the direct children of the supplied local directory; it does not recurse into subdirectories. Hidden files, Excel lock files (`~# Architecture — Initial Design
+
+The project is being rebuilt as an independent, layered Python application. The original script is a behavioral reference only; no employer-specific path, workbook, account, board ID, token, or endpoint configuration is reused.
+
+## Layers
+
+- **Domain:** immutable typed models and business classifications.
+- **Services:** pure normalization, consolidation, and comparison rules.
 - **Adapters:** movement and reference Excel input readers and the local Excel report writer are implemented. The local mock work-board gateway remains planned.
 - **Application (next milestone):** daily run and monthly-close orchestration.
 - **CLI (next milestone):** explicit commands for demo, daily comparison, and monthly close.
@@ -17,6 +39,12 @@ The `adapters/excel_reader.py` module converts external files into typed domain 
 ## Excel report output adapter
 
 The `adapters/excel_report.py` module serializes an already-computed `ComparisonReport` to an `.xlsx` file at the caller-supplied local path. It creates the destination directory when needed and writes the `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas` worksheets. The adapter does not recalculate classifications, modify input workbooks, or access external services.
+
+), empty files, and unsupported extensions are ignored. A non-empty candidate workbook that fails validation stops discovery and reports the filename.
+
+Movement discovery considers only released records whose Release Date belongs to the requested competence. The workbook with the latest release date wins; file modification time is used only as a tie-breaker. If both criteria tie, discovery fails as ambiguous. Reference discovery requires the competence extracted from the workbook header to match the requested month and requires exactly one matching workbook.
+
+Discovery accepts explicitly supplied local paths and dates. It does not search OneDrive, SharePoint, or any remote service, and it never moves, renames, or modifies source files.
 
 ## Planned boundaries
 
