@@ -82,6 +82,12 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="YYYY-MM-DD",
         help="Date used to evaluate classifications (defaults to the cutoff date).",
     )
+    reconcile.add_argument(
+        "--task-board",
+        type=Path,
+        metavar="PATH",
+        help="Optional JSON file for persistent local simulation of underpaid tasks.",
+    )
     return parser
 
 
@@ -98,6 +104,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             cutoff_date=args.cutoff_date,
             output_path=args.output,
             evaluation_date=args.evaluation_date,
+            task_board_path=args.task_board,
         )
     except (OSError, ValueError) as error:
         print(f"Error: {error}", file=sys.stderr)
@@ -107,4 +114,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"Movement workbook: {result.movement_workbook}")
     print(f"Reference workbook: {result.reference_workbook}")
     print(f"Report: {result.output_workbook}")
+    if result.task_board_result is not None:
+        task_result = result.task_board_result
+        print("Local task-board simulation:")
+        print(f"Eligible companies: {task_result.eligible_companies}")
+        print(f"Created tasks: {task_result.created_tasks}")
+        print(f"Skipped existing tasks: {task_result.skipped_existing}")
     return 0
