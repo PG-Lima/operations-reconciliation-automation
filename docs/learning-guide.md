@@ -78,12 +78,18 @@ A execução considera competência novembro de 2026, data de corte em 12 de nov
 Com o ambiente virtual ativo e o projeto instalado com `python -m pip install -e ".[dev]"`, execute o comando abaixo no PowerShell, ajustando os diretórios e datas para os arquivos fictícios preparados:
 
 ```powershell
-operations-reconciliation reconcile --movement-dir "examples/data/movements" --reference-dir "examples/data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+operations-reconciliation reconcile --movement-dir "examples/data/movements" --reference-dir "examples/data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13 --task-board "local-state/task-board.json"
 ```
 
-A competência usa `YYYY-MM`; as datas usam `YYYY-MM-DD`. A data de avaliação pode ser omitida, caso em que será utilizada a data de corte. O comando imprime os caminhos dos arquivos selecionados e do relatório gerado. Ele não cria as planilhas de entrada: os diretórios e arquivos devem existir e seguir os contratos deste guia.
+A competência usa `YYYY-MM`; as datas usam `YYYY-MM-DD`. A data de avaliação pode ser omitida, caso em que será utilizada a data de corte. `--task-board` também é opcional: quando informado, persiste as tarefas simuladas em JSON local; quando omitido, nenhuma tarefa é criada. O comando imprime os caminhos dos arquivos selecionados e do relatório gerado. Ele não cria as planilhas de entrada: os diretórios e arquivos devem existir e seguir os contratos deste guia.
 
 Consulte [Interface de linha de comando](cli.md) para ver todos os argumentos e códigos de saída.
+
+## Simular tarefas locais
+
+Para habilitar a simulação, acrescente `--task-board "local-state/task-board.json"` ao comando da CLI. Somente empresas classificadas como `Menor` geram tarefas. O título contém empresa e competência; a deduplicação utiliza internamente o nome normalizado da empresa e a competência, de modo que uma reexecução não duplica tarefas já registradas.
+
+O arquivo JSON guarda o estado local do simulador. A pasta padrão `local-state/` está no `.gitignore`, mas caminhos alternativos não são ignorados automaticamente. Use dados sintéticos e não publique o arquivo. A simulação não se conecta ao Monday.com nem cria itens remotos.
 
 ## Entender os contratos das planilhas
 
@@ -190,6 +196,6 @@ Não reutilize dados reais de empregadores ou clientes nos exemplos, testes ou c
 
 ## Limites atuais
 
-O fluxo documentado é local. Não há agendamento, integração com Monday.com, criação de tarefas, fechamento mensal automático ou promoção de referência implementados nesta etapa. Esses itens são planejados e não devem ser tratados como funcionalidades disponíveis.
+O fluxo documentado é local. Não há agendamento, integração com Monday.com, criação de tarefas em quadros externos, fechamento mensal automático ou promoção de referência implementados nesta etapa. A simulação local é opcional e já está disponível; o fechamento mensal e a promoção de referência permanecem planejados.
 
 A CLI executa o fluxo com planilhas fornecidas pelo usuário; o teste de integração continua sendo a demonstração autossuficiente que cria os próprios arquivos sintéticos.
