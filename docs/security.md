@@ -4,15 +4,17 @@ Este documento descreve os limites de segurança da implementação atual e orie
 
 ## Escopo de segurança atual
 
-A execução implementada é local. O fluxo recebe caminhos de diretórios e datas, lê planilhas Excel, calcula a conciliação e grava um relatório no caminho informado.
+A execução implementada é local. O fluxo recebe caminhos de diretórios e datas, lê planilhas Excel, calcula a conciliação e grava um relatório no caminho informado. Opcionalmente, pode atualizar um quadro de tarefas simulado em um arquivo JSON local.
 
 A implementação atual:
 
 - Não autentica em Microsoft 365, SharePoint, OneDrive ou Monday.com.
 - Não envia planilhas para serviços remotos.
-- Não cria tarefas ou itens em quadros externos.
+- Não cria tarefas ou itens em quadros externos; a única criação disponível é a simulação local opcional.
 - Não armazena credenciais ou tokens para conectores remotos.
 - Não agenda execuções nem executa o fechamento mensal planejado.
+
+Quando `--task-board` é utilizado, o JSON local contém os títulos das tarefas e metadados internos com nomes normalizados de empresas e competências. Esses dados podem ser sensíveis. Utilize apenas dados fictícios em demonstrações, armazene o arquivo em uma pasta com acesso adequado e não o envie ao Git. A pasta padrão `local-state/` é ignorada pelo `.gitignore`; caminhos alternativos precisam ser protegidos pelo usuário.
 
 A descoberta de arquivos examina somente os arquivos diretamente contidos nos diretórios fornecidos. Ela não percorre subpastas. Arquivos ocultos, temporários do Excel, vazios e com extensões não suportadas são ignorados. Uma planilha candidata não vazia que falhe na validação interrompe a descoberta com erro explícito.
 
