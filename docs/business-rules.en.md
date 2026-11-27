@@ -58,7 +58,7 @@ The `run_reconciliation()` function coordinates one complete local execution:
 4. The output path cannot match the path of either selected input workbook.
 5. The function returns a `ReconciliationResult` containing the selected file paths, comparison result, and report path.
 
-This orchestration is local. It does not schedule executions, create tasks on boards, promote references, or access remote services.
+This orchestration is local. Simulated task creation runs only when a `--task-board` path is supplied. The workflow does not schedule executions, create tasks on external boards, promote references, or access remote services.
 
 ## Excel report
 
@@ -81,12 +81,13 @@ The rules below describe a future extension and are not part of the currently im
 6. The new reference will contain companies with at least one released movement in the closed month. Companies with no movement will be removed; newly observed companies will be added.
 7. If a closing source cannot be selected or validated, the current reference will be preserved and the next month's comparison will stop.
 
-## Work-board integration — planned workflow
+## Local task-board simulation
 
-The rules below are proposals for a future integration. The current implementation does not use a board or API connector.
-
-1. Only companies classified as `Menor` will create tasks.
-2. The task title will contain the company and competence; this pair will be the deduplication key.
-3. Existing tasks will be ignored, including when a previous run ends partially.
-4. A task will be created with its title only; other columns will not be populated.
-5. Future automated tests and demonstrations should use a local mock board. A real API connector is not part of the current milestone.
+1. The simulator is optional and runs only when the caller supplies a JSON path through the `--task-board` argument or the application's `task_board_path` parameter.
+2. Only companies classified as `Menor` create tasks. `Aguardando`, `Igual`, `Maior`, `Não pagou`, and `Sem referência` do not create tasks.
+3. The visible title contains the company name and competence in the format `Company - YYYY-MM`.
+4. The internal deduplication key consists of the normalized company name and the `YYYY-MM` competence. Repeated runs skip existing keys, including after a previous run was interrupted.
+5. The visible task contains only its title. The company key and competence are internal metadata required for deduplication, not additional task fields.
+6. The board is persisted in a local JSON file, uses a schema version, and writes updates by atomically replacing a temporary file.
+7. Invalid or corrupted JSON, or duplicate identities, stops execution; the simulator does not silently discard existing state.
+8. The simulator does not use APIs, authenticate with Monday.com, or create tasks on external boards. The local file must be protected and must not contain real employer or customer data.
