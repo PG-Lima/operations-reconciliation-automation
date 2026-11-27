@@ -65,6 +65,18 @@ python -m ruff check src tests
 
 The current implementation includes the core domain rules, Excel input and report adapters, deterministic local workbook discovery, and single-run reconciliation orchestration. Local task-board simulation and monthly close remain planned.
 
+## Documentation
+
+The documentation is available in Portuguese and English:
+
+| Topic | Português | English |
+|---|---|---|
+| Architecture | [Arquitetura](docs/architecture.md) | [Architecture](docs/architecture.en.md) |
+| Business rules | [Regras de negócio](docs/business-rules.md) | [Business rules](docs/business-rules.en.md) |
+| Learning guide | [Guia de aprendizagem](docs/learning-guide.md) | [Learning guide](docs/learning-guide.en.md) |
+| Security | [Segurança e limites dos dados](docs/security.md) | [Security and data boundaries](docs/security.en.md) |
+| Quality assurance | [Garantia de qualidade](docs/quality-assurance.md) | [Quality assurance](docs/quality-assurance.en.md) |
+
 ## Project structure
 
 ```text
@@ -76,7 +88,7 @@ src/operations_reconciliation/
 
 tests/unit/       # Fast tests for rules and file validation
 tests/integration/ # Excel-to-domain workflow tests
-docs/             # Architecture and business-rule documentation
+docs/             # Bilingual architecture, rules, learning, security, and QA guides
 ```
 
 ## Excel input contracts
@@ -154,6 +166,34 @@ python -m ruff check src tests
 ```
 
 A implementação atual inclui as regras centrais do domínio, os adaptadores Excel, a descoberta determinística de planilhas locais e a orquestração de uma execução completa de conciliação. A simulação do quadro e o fechamento mensal permanecem planejados.
+
+## Documentação
+
+A documentação está disponível em português e inglês:
+
+| Tema | Português | English |
+|---|---|---|
+| Arquitetura | [Arquitetura](docs/architecture.md) | [Architecture](docs/architecture.en.md) |
+| Regras de negócio | [Regras de negócio](docs/business-rules.md) | [Business rules](docs/business-rules.en.md) |
+| Aprendizagem | [Guia de aprendizagem](docs/learning-guide.md) | [Learning guide](docs/learning-guide.en.md) |
+| Segurança | [Segurança e limites dos dados](docs/security.md) | [Security and data boundaries](docs/security.en.md) |
+| Qualidade | [Garantia de qualidade](docs/quality-assurance.md) | [Quality assurance](docs/quality-assurance.en.md) |
+
+## Estrutura do projeto
+
+```text
+src/operations_reconciliation/
+├── adapters/     # Entrada, saída e descoberta local de planilhas Excel
+├── application/  # Orquestração do fluxo de conciliação
+├── domain/       # Modelos tipados do domínio
+└── services/     # Normalização, consolidação e comparação
+
+tests/
+├── unit/         # Testes isolados de regras e adaptadores
+└── integration/  # Testes do fluxo completo com planilhas Excel
+
+docs/             # Guias bilíngues de arquitetura, regras, aprendizagem, segurança e qualidade
+```
 
 ## Contratos de entrada Excel
 
