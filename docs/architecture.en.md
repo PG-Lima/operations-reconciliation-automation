@@ -19,8 +19,8 @@ The current workflow follows these steps:
 ## Application layers
 
 - **Domain (`domain/`):** immutable typed models representing reconciliation data and results.
-- **Services (`services/`):** normalization, movement consolidation, and comparison rules. These rules do not depend on Excel files or external services.
-- **Adapters (`adapters/`):** Excel workbook reading and validation, local file discovery, and Excel report generation.
+- **Services (`services/`):** normalization, movement consolidation, comparison rules, and selection of `Menor` companies for simulated tasks. These rules do not depend on Excel files or external services.
+- **Adapters (`adapters/`):** Excel workbook reading and validation, local file discovery, Excel report generation, and persistence for the simulated task board.
 - **Application (`application/`):** coordinates adapters and services to execute the complete local reconciliation workflow.
 - **CLI (`cli.py`):** parses terminal arguments, validates date formats, and calls the application function without duplicating business rules.
 
@@ -71,17 +71,25 @@ The `operations-reconciliation` entry point provides the `reconcile` subcommand.
 
 The CLI validates input formats and delegates processing to `run_reconciliation()`. It does not implement discovery, workbook reading, comparison, or report generation itself. The process exit code is `0` on success, `1` for execution failures, and `2` for invalid arguments handled by argparse.
 
+## Local task-board simulation
+
+The `adapters/local_task_board.py` adapter persists the simulated board in a local JSON file. Each visible task contains only its title; internal identity metadata stores the normalized company and competence to support deduplication across repeated runs.
+
+The `services/task_creation.py` service selects only rows classified as `Menor` and builds the title `Company - YYYY-MM`. The application runs this step only when `task_board_path` is supplied. The file is validated before updates, and writes use a temporary file followed by atomic replacement. The simulator is intended for sequential local runs; it does not coordinate concurrent writers.
+
+The Excel report is written before task-board simulation. Therefore, a failure while reading or updating the JSON file can end the run with an error even though the report has already been produced.
+
 ## Current implementation boundaries
 
 Execution is local and depends on the directories and dates supplied by the caller. The project does not authenticate with remote services, directly access Microsoft 365 or Monday.com environments, or create tasks on external boards.
 
-The application does not schedule runs, implement monthly closing, or promote or archive reference workbooks.
+The application does not schedule runs, implement monthly closing, or promote or archive reference workbooks. The local task-board simulation is optional and does not replace a real integration.
 
 Source workbooks are read by the reconciliation workflow and should not be modified. The report is generated at a separate output path, and the application prevents that path from overwriting the selected input files.
 
 ## Planned next steps
 
-Planned extensions include a local mock adapter to represent task-board operations and a monthly closing workflow with controlled reference archiving and promotion.
+The next planned extension is a monthly closing workflow with controlled reference archiving and promotion.
 
 These features are planned and are not part of the currently implemented workflow.
 
