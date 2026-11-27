@@ -22,7 +22,7 @@ The current workflow follows these steps:
 - **Services (`services/`):** normalization, movement consolidation, and comparison rules. These rules do not depend on Excel files or external services.
 - **Adapters (`adapters/`):** Excel workbook reading and validation, local file discovery, and Excel report generation.
 - **Application (`application/`):** coordinates adapters and services to execute the complete local reconciliation workflow.
-- **CLI:** a command-line interface has not been implemented yet. Demo and guided execution commands remain planned.
+- **CLI (`cli.py`):** parses terminal arguments, validates date formats, and calls the application function without duplicating business rules.
 
 ## Excel input adapter
 
@@ -65,17 +65,23 @@ The application rejects:
 
 On completion, the function returns a `ReconciliationResult` containing the selected workbooks, the comparison report, and the output file path.
 
+## Command-line interface
+
+The `operations-reconciliation` entry point provides the `reconcile` subcommand. It accepts the movement and reference directories, a competence in `YYYY-MM` format, a cutoff date, an output path, and an optional evaluation date.
+
+The CLI validates input formats and delegates processing to `run_reconciliation()`. It does not implement discovery, workbook reading, comparison, or report generation itself. The process exit code is `0` on success, `1` for execution failures, and `2` for invalid arguments handled by argparse.
+
 ## Current implementation boundaries
 
 Execution is local and depends on the directories and dates supplied by the caller. The project does not authenticate with remote services, directly access Microsoft 365 or Monday.com environments, or create tasks on external boards.
 
-The application does not schedule runs, implement monthly closing, or promote or archive reference workbooks. A CLI is also not available in this milestone.
+The application does not schedule runs, implement monthly closing, or promote or archive reference workbooks.
 
 Source workbooks are read by the reconciliation workflow and should not be modified. The report is generated at a separate output path, and the application prevents that path from overwriting the selected input files.
 
 ## Planned next steps
 
-Planned extensions include a CLI to make execution easier to reproduce, a local mock adapter to represent task-board operations, and a monthly closing workflow with controlled reference archiving and promotion.
+Planned extensions include a local mock adapter to represent task-board operations and a monthly closing workflow with controlled reference archiving and promotion.
 
 These features are planned and are not part of the currently implemented workflow.
 
