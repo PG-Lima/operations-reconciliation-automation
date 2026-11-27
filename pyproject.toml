@@ -17,6 +17,9 @@ dependencies = [
   "lxml>=5,<7",
 ]
 
+[project.scripts]
+operations-reconciliation = "operations_reconciliation.cli:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",

@@ -14,10 +14,10 @@ This document describes how quality is checked locally and through continuous in
 
 Tests are separated into two layers:
 
-- **Unit tests — tests/unit/:** verify isolated rules and components, including normalization, consolidation, comparison, Excel reading, discovery, report generation, and application orchestration.
+- **Unit tests — tests/unit/:** verify isolated rules and components, including normalization, consolidation, comparison, Excel reading, discovery, report generation, application orchestration, and CLI parsing/execution.
 - **Integration tests — tests/integration/:** verify workflows connecting real components. They include the Excel-to-comparison flow and the complete flow from input workbooks to the final report.
 
-The test test_application_workflow_integration.py creates synthetic workbooks in temporary directories and runs the application function without replacing components with mocks. It verifies classifications, totals, all seven report worksheets, and that the original workbooks remain unchanged.
+CLI tests verify date parsing, required arguments, application execution, and error messages. The test test_application_workflow_integration.py creates synthetic workbooks in temporary directories and runs the application function without replacing components with mocks. It verifies classifications, totals, all seven report worksheets, and that the original workbooks remain unchanged.
 
 ## Run checks locally
 
