@@ -24,6 +24,15 @@ def _arguments(tmp_path: Path) -> list[str]:
     ]
 
 
+def _result(tmp_path: Path, task_board_result=None):
+    return SimpleNamespace(
+        movement_workbook=tmp_path / "movements" / "movement.xlsx",
+        reference_workbook=tmp_path / "references" / "reference.xlsx",
+        output_workbook=tmp_path / "output" / "report.xlsx",
+        task_board_result=task_board_result,
+    )
+
+
 def test_parses_valid_competence() -> None:
     assert cli._parse_competence("2026-11") == date(2026, 11, 1)
 
@@ -49,11 +58,7 @@ def test_main_runs_reconciliation_and_prints_result(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    result = SimpleNamespace(
-        movement_workbook=tmp_path / "movements" / "movement.xlsx",
-        reference_workbook=tmp_path / "references" / "reference.xlsx",
-        output_workbook=tmp_path / "output" / "report.xlsx",
-    )
+    result = _result(tmp_path)
     run = Mock(return_value=result)
     monkeypatch.setattr(cli, "run_reconciliation", run)
     arguments = _arguments(tmp_path) + ["--evaluation-date", "2026-11-13"]
@@ -68,29 +73,51 @@ def test_main_runs_reconciliation_and_prints_result(
         cutoff_date=date(2026, 11, 12),
         output_path=tmp_path / "output" / "report.xlsx",
         evaluation_date=date(2026, 11, 13),
+        task_board_path=None,
     )
     output = capsys.readouterr().out
     assert "Reconciliation completed successfully." in output
     assert str(result.movement_workbook) in output
     assert str(result.reference_workbook) in output
     assert str(result.output_workbook) in output
+    assert "task-board simulation" not in output
 
 
-def test_main_defaults_evaluation_date_to_none(
+def test_main_defaults_evaluation_date_and_task_board_to_none(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    run = Mock(
-        return_value=SimpleNamespace(
-            movement_workbook=Path("movement.xlsx"),
-            reference_workbook=Path("reference.xlsx"),
-            output_workbook=Path("report.xlsx"),
-        )
-    )
+    run = Mock(return_value=_result(tmp_path))
     monkeypatch.setattr(cli, "run_reconciliation", run)
 
     assert cli.main(_arguments(tmp_path)) == 0
     assert run.call_args.kwargs["evaluation_date"] is None
+    assert run.call_args.kwargs["task_board_path"] is None
+
+
+def test_main_passes_optional_task_board_and_prints_summary(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    task_result = SimpleNamespace(
+        eligible_companies=3,
+        created_tasks=2,
+        skipped_existing=1,
+    )
+    result = _result(tmp_path, task_result)
+    run = Mock(return_value=result)
+    monkeypatch.setattr(cli, "run_reconciliation", run)
+    task_path = tmp_path / "task-board.json"
+
+    assert cli.main(_arguments(tmp_path) + ["--task-board", str(task_path)]) == 0
+
+    assert run.call_args.kwargs["task_board_path"] == task_path
+    output = capsys.readouterr().out
+    assert "Local task-board simulation:" in output
+    assert "Eligible companies: 3" in output
+    assert "Created tasks: 2" in output
+    assert "Skipped existing tasks: 1" in output
 
 
 @pytest.mark.parametrize(

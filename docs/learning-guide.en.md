@@ -78,12 +78,18 @@ The run uses November 2026 as the competence, November 12 as the cutoff date, an
 With the virtual environment active and the project installed using `python -m pip install -e ".[dev]"`, run this command in PowerShell, adjusting the folders and dates to match the synthetic workbooks you prepared:
 
 ```powershell
-operations-reconciliation reconcile --movement-dir "examples/data/movements" --reference-dir "examples/data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+operations-reconciliation reconcile --movement-dir "examples/data/movements" --reference-dir "examples/data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13 --task-board "local-state/task-board.json"
 ```
 
-Competence uses `YYYY-MM`; dates use `YYYY-MM-DD`. The evaluation date may be omitted, in which case the cutoff date is used. The command prints the paths of the selected workbooks and the generated report. It does not create input workbooks: the directories and files must exist and follow this guide's contracts.
+Competence uses `YYYY-MM`; dates use `YYYY-MM-DD`. The evaluation date may be omitted, in which case the cutoff date is used. `--task-board` is also optional: when supplied, it persists simulated tasks in a local JSON file; when omitted, no tasks are created. The command prints the paths of the selected workbooks and the generated report. It does not create input workbooks: the directories and files must exist and follow this guide's contracts.
 
 See the [Command-line interface guide](cli.en.md) for all arguments and exit codes.
+
+## Simulate local tasks
+
+To enable the simulation, add `--task-board "local-state/task-board.json"` to the CLI command. Only companies classified as `Menor` create tasks. The title contains the company and competence; deduplication internally uses the normalized company name and competence so repeated runs do not duplicate existing tasks.
+
+The JSON file stores the simulator's local state. The default `local-state/` folder is listed in `.gitignore`, but alternate paths are not ignored automatically. Use synthetic data and do not publish the file. The simulation does not connect to Monday.com or create remote items.
 
 ## Understand the workbook contracts
 
@@ -190,6 +196,6 @@ Do not reuse real employer or customer data in examples, tests, or commits. See 
 
 ## Current limitations
 
-The documented workflow runs locally. Scheduling, Monday.com integration, task creation, automatic monthly closing, and reference promotion are not implemented in this milestone. These items are planned and must not be treated as available features.
+The documented workflow runs locally. Scheduling, Monday.com integration, external task creation, automatic monthly closing, and reference promotion are not implemented in this milestone. The optional local task simulation is available; monthly closing and reference promotion remain planned.
 
 The CLI runs the workflow with user-supplied workbooks; the integration test remains the self-contained demonstration that creates its own synthetic files.

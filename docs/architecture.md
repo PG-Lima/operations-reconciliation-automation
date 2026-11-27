@@ -19,8 +19,8 @@ O fluxo atual segue estas etapas:
 ## Camadas da aplicação
 
 - **Domínio (`domain/`):** modelos tipados e imutáveis que representam os dados e resultados da conciliação.
-- **Serviços (`services/`):** regras de normalização, consolidação de movimentações e comparação. As regras não dependem de arquivos Excel ou serviços externos.
-- **Adaptadores (`adapters/`):** leitura e validação das planilhas Excel, descoberta de arquivos locais e geração do relatório Excel.
+- **Serviços (`services/`):** regras de normalização, consolidação de movimentações, comparação e seleção de empresas `Menor` para tarefas simuladas. As regras não dependem de arquivos Excel ou serviços externos.
+- **Adaptadores (`adapters/`):** leitura e validação das planilhas Excel, descoberta de arquivos locais, geração do relatório Excel e persistência do quadro de tarefas simulado.
 - **Aplicação (`application/`):** coordena os adaptadores e serviços para executar o fluxo completo de uma conciliação local.
 - **CLI (`cli.py`):** interpreta os argumentos do terminal, valida o formato das datas e chama a função de aplicação sem duplicar regras de negócio.
 
@@ -71,9 +71,17 @@ O entry point `operations-reconciliation` disponibiliza o subcomando `reconcile`
 
 A CLI valida os formatos de entrada e delega o processamento para `run_reconciliation()`. Ela não implementa descoberta, leitura, comparação ou geração de planilhas por conta própria. O código de saída é `0` em caso de sucesso, `1` para falhas da execução e `2` para argumentos inválidos tratados pelo argparse.
 
+## Simulação local do quadro de tarefas
+
+O adaptador `adapters/local_task_board.py` persiste o quadro simulado em um arquivo JSON local. Cada tarefa visível possui somente o título; a identidade interna é armazenada com a empresa normalizada e a competência para permitir deduplicação em reexecuções.
+
+O serviço `services/task_creation.py` seleciona exclusivamente linhas com classificação `Menor` e constrói o título `Empresa - YYYY-MM`. A aplicação executa essa etapa somente quando `task_board_path` é fornecido. O arquivo é validado antes de ser atualizado, e a gravação utiliza arquivo temporário e substituição atômica. O simulador destina-se a execuções sequenciais locais; não oferece coordenação entre escritores concorrentes.
+
+O relatório Excel é gravado antes da simulação do quadro. Portanto, uma falha ao ler ou atualizar o arquivo JSON pode encerrar a execução com erro, embora o relatório já tenha sido produzido.
+
 ## Limites da implementação atual
 
-A execução é local e depende dos diretórios e das datas fornecidos pelo chamador. O projeto não realiza autenticação em serviços remotos, não acessa diretamente ambientes Microsoft 365 ou Monday.com e não cria tarefas em quadros externos.
+A execução é local e depende dos diretórios e das datas fornecidos pelo chamador. O projeto não realiza autenticação em serviços remotos, não acessa diretamente ambientes Microsoft 365 ou Monday.com e não cria tarefas em quadros externos. A simulação local é opcional e não substitui uma integração real.
 
 A aplicação não agenda execuções, não implementa fechamento mensal e não promove ou arquiva planilhas de referência.
 
@@ -81,7 +89,7 @@ As planilhas de origem são utilizadas para leitura e não devem ser modificadas
 
 ## Próximas etapas planejadas
 
-As evoluções previstas incluem um adaptador local simulado para representar operações em um quadro de tarefas e um fluxo de fechamento mensal com arquivamento e promoção controlada da referência.
+A próxima evolução prevista é um fluxo de fechamento mensal com arquivamento e promoção controlada da referência.
 
 Essas funcionalidades são planejamento e não fazem parte do fluxo implementado atualmente.
 

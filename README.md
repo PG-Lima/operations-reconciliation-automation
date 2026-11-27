@@ -6,7 +6,7 @@
 
 A Python project that demonstrates a reproducible, local workflow for reconciling monthly operational releases against a reference schedule. It validates and discovers Excel workbooks, consolidates released records, compares companies against scheduled quantities and dates, and generates a structured Excel report.
 
-> This is an independent educational project. It contains no employer data, credentials, board identifiers, or connections to any employer's Microsoft 365 or Monday.com environment. The current workflow runs locally; remote board integration and task creation are not implemented.
+> This is an independent educational project. It contains no employer data, credentials, board identifiers, or connections to any employer's Microsoft 365 or Monday.com environment. The workflow runs locally. The optional task-board feature uses a local JSON simulator only; no remote board integration or external task creation is implemented.
 
 ## Project purpose
 
@@ -30,7 +30,8 @@ This repository has two equally important goals:
 - Discover movement and reference workbooks from explicitly configured local folders using deterministic selection rules.
 - Orchestrate a complete local reconciliation run from explicitly supplied folders, competence, and dates.
 - Run the reconciliation workflow through the installed `operations-reconciliation` command-line interface.
-- Keep local task-board simulation, monthly closing, reference archiving, and reference promotion as planned future milestones.
+- Optionally create title-only simulated tasks for companies classified as `Menor`, using a persistent local JSON board and a normalized company/competence deduplication key.
+- Keep monthly closing, reference archiving, and reference promotion as planned future milestones.
 
 ## Requirements
 
@@ -62,10 +63,10 @@ python -m pip install -e ".[dev]"
 After installing the project in the active virtual environment, run:
 
 ```powershell
-operations-reconciliation reconcile --movement-dir "data/movements" --reference-dir "data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+operations-reconciliation reconcile --movement-dir "data/movements" --reference-dir "data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13 --task-board "local-state/task-board.json"
 ```
 
-The evaluation date is optional. When omitted, it defaults to the cutoff date. Competence must use `YYYY-MM`; cutoff and evaluation dates must use `YYYY-MM-DD`. The input folders must contain workbooks that satisfy the documented Excel contracts. The report is written to the supplied `.xlsx` destination.
+The evaluation date and `--task-board` are optional. When omitted, the evaluation date defaults to the cutoff date and no task-board simulation runs. When `--task-board` is supplied, the local JSON board persists title-only tasks for companies classified as `Menor`; repeated runs skip existing company/competence keys. Competence must use `YYYY-MM`; cutoff and evaluation dates must use `YYYY-MM-DD`. The input folders must contain workbooks that satisfy the documented Excel contracts. The report is written to the supplied `.xlsx` destination. The default `local-state/` folder is ignored by Git.
 
 See the [CLI guide](docs/cli.en.md) for argument details and exit codes.
 
@@ -76,7 +77,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-The current implementation includes the core domain rules, Excel input and report adapters, deterministic local workbook discovery, single-run reconciliation orchestration, and an installable command-line interface. Local task-board simulation and monthly close remain planned.
+The current implementation includes the core domain rules, Excel input and report adapters, deterministic local workbook discovery, single-run reconciliation orchestration, and an installable command-line interface. The local task-board simulator is implemented; monthly close remains planned.
 
 ## Documentation
 
@@ -95,11 +96,11 @@ The documentation is available in Portuguese and English:
 
 ```text
 src/operations_reconciliation/
-├── adapters/     # Excel input, output, and discovery adapters
+├── adapters/     # Excel input, output, discovery, and local task-board adapters
 ├── application/  # Reconciliation workflow orchestration
 ├── cli.py        # Command-line interface
 ├── domain/       # Typed domain models
-└── services/     # Normalization, consolidation, comparison
+└── services/     # Normalization, consolidation, comparison, task creation
 
 tests/unit/       # Fast tests for rules and file validation
 tests/integration/ # Excel-to-domain workflow tests
@@ -125,7 +126,7 @@ Use synthetic example records only. Do not commit spreadsheets exported from an 
 
 Projeto em Python que demonstra um fluxo local e reproduzível para conciliar movimentações operacionais mensais com uma referência de programação. Ele valida e descobre planilhas Excel, consolida registros liberados, compara empresas com as quantidades e datas previstas e gera um relatório Excel estruturado.
 
-> Este é um projeto educacional independente. Ele não contém dados corporativos, credenciais, identificadores de quadros ou conexões com ambientes Microsoft 365 ou Monday.com de empregadores. O fluxo atual é executado localmente; a integração com quadros remotos e a criação de tarefas ainda não foram implementadas.
+> Este é um projeto educacional independente. Ele não contém dados corporativos, credenciais, identificadores de quadros ou conexões com ambientes Microsoft 365 ou Monday.com de empregadores. O fluxo é local; o quadro de tarefas é apenas uma simulação JSON opcional, sem integração remota.
 
 ## Objetivos do projeto
 
@@ -147,7 +148,8 @@ Este repositório tem dois objetivos igualmente importantes:
 - Descobrir planilhas de movimentação e referência em pastas locais configuradas explicitamente, com critérios determinísticos de seleção.
 - Orquestrar uma execução local completa a partir das pastas, competência e datas informadas, gerando o relatório Excel.
 - Executar o fluxo pelo comando de linha de comando `operations-reconciliation` instalado no ambiente Python.
-- Manter a simulação local do quadro de tarefas, o fechamento mensal, o arquivamento e a promoção da referência como etapas futuras.
+- Criar opcionalmente tarefas simuladas, contendo apenas o título, para empresas classificadas como `Menor`, usando um quadro JSON local persistente e uma chave de deduplicação por empresa normalizada/competência.
+- Manter o fechamento mensal, o arquivamento e a promoção da referência como etapas futuras.
 
 ## Requisitos
 
@@ -179,10 +181,10 @@ python -m pip install -e ".[dev]"
 Depois de instalar o projeto no ambiente virtual ativo, execute:
 
 ```powershell
-operations-reconciliation reconcile --movement-dir "data/movements" --reference-dir "data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+operations-reconciliation reconcile --movement-dir "data/movements" --reference-dir "data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13 --task-board "local-state/task-board.json"
 ```
 
-A data de avaliação é opcional. Quando omitida, assume a data de corte. A competência deve usar o formato `YYYY-MM`; as datas de corte e avaliação devem usar `YYYY-MM-DD`. As pastas de entrada precisam conter planilhas que atendam aos contratos Excel documentados. O relatório é gravado no destino `.xlsx` informado.
+A data de avaliação e `--task-board` são opcionais. Quando omitida, a data de avaliação assume a data de corte e nenhuma simulação de tarefas é executada. Com `--task-board`, o quadro JSON local persiste tarefas contendo apenas o título para empresas classificadas como `Menor`; reexecuções ignoram chaves de empresa/competência já existentes. A competência usa `YYYY-MM`; as datas de corte e avaliação usam `YYYY-MM-DD`. As pastas de entrada precisam conter planilhas que atendam aos contratos Excel documentados. O relatório é gravado no destino `.xlsx` informado. A pasta padrão `local-state/` é ignorada pelo Git.
 
 Consulte o [guia da CLI](docs/cli.md) para detalhes dos argumentos e códigos de saída.
 
@@ -193,7 +195,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-A implementação atual inclui as regras centrais do domínio, os adaptadores Excel, a descoberta determinística de planilhas locais, a orquestração de uma execução completa de conciliação e uma interface de linha de comando instalável. A simulação do quadro e o fechamento mensal permanecem planejados.
+A implementação atual inclui as regras centrais do domínio, os adaptadores Excel, a descoberta determinística de planilhas locais, a orquestração de uma execução completa de conciliação e uma interface de linha de comando instalável. A simulação local do quadro está implementada; o fechamento mensal permanece planejado.
 
 ## Documentação
 
@@ -212,11 +214,11 @@ A documentação está disponível em português e inglês:
 
 ```text
 src/operations_reconciliation/
-├── adapters/     # Entrada, saída e descoberta local de planilhas Excel
+├── adapters/     # Entrada, saída, descoberta Excel e quadro local simulado
 ├── application/  # Orquestração do fluxo de conciliação
 ├── cli.py        # Interface de linha de comando
 ├── domain/       # Modelos tipados do domínio
-└── services/     # Normalização, consolidação e comparação
+└── services/     # Normalização, consolidação, comparação e criação de tarefas
 
 tests/
 ├── unit/         # Testes isolados de regras e adaptadores

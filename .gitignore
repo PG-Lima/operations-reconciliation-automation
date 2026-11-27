@@ -23,6 +23,7 @@ data/history/*
 reports/
 logs/
 control/
+local-state/
 *.sqlite3
 *.db
 

@@ -1,4 +1,4 @@
-﻿"""Coordinate the complete local reconciliation workflow."""
+"""Coordinate the complete local reconciliation workflow."""
 
 from __future__ import annotations
 
@@ -15,9 +15,14 @@ from operations_reconciliation.adapters.file_discovery import (
     discover_movement_workbook,
     discover_reference_workbook,
 )
+from operations_reconciliation.adapters.local_task_board import LocalTaskBoard
 from operations_reconciliation.domain.models import ComparisonReport
 from operations_reconciliation.services.comparison import compare_companies
 from operations_reconciliation.services.consolidation import consolidate_releases
+from operations_reconciliation.services.task_creation import (
+    TaskBoardSimulationResult,
+    create_underpaid_tasks,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +33,7 @@ class ReconciliationResult:
     reference_workbook: Path
     report: ComparisonReport
     output_workbook: Path
+    task_board_result: TaskBoardSimulationResult | None = None
 
 
 def run_reconciliation(
@@ -38,8 +44,13 @@ def run_reconciliation(
     output_path: Path,
     *,
     evaluation_date: date | None = None,
+    task_board_path: Path | None = None,
 ) -> ReconciliationResult:
-    """Discover inputs, reconcile their data, and write a local Excel report."""
+    """Discover inputs, reconcile their data, and write local outputs.
+
+    When task_board_path is supplied, underpaid companies are processed by the
+    persistent local task-board simulator after the Excel report is generated.
+    """
     if (cutoff_date.year, cutoff_date.month) != (competence.year, competence.month):
         raise ValueError("Cutoff date must belong to the requested competence.")
 
@@ -66,9 +77,15 @@ def run_reconciliation(
     )
     output_workbook = write_comparison_report(report, destination)
 
+    task_board_result = None
+    if task_board_path is not None:
+        board = LocalTaskBoard(task_board_path)
+        task_board_result = create_underpaid_tasks(report, competence, board)
+
     return ReconciliationResult(
         movement_workbook=movement_file,
         reference_workbook=reference_file,
         report=report,
         output_workbook=output_workbook,
+        task_board_result=task_board_result,
     )
