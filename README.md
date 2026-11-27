@@ -4,7 +4,7 @@
 
 **English** | [Português](#português)
 
-A Python project for reconciling monthly operational releases against a reference schedule. The current public milestone implements Excel input validation, deterministic local workbook discovery, domain rules, comparison, and local report generation. The application orchestration is being added in a separate development branch and is not yet part of this documentation branch's base.
+A Python project for reconciling monthly operational releases against a reference schedule. It demonstrates explicit Excel data contracts, deterministic local workbook discovery, domain rules, comparison, and structured report generation. Its design prioritizes reproducibility and keeps external service integrations outside the current scope.
 
 > This is an independent educational project. It contains no employer data, credentials, board identifiers, or connections to an employer's Microsoft 365 or Monday.com environment. The implemented workflow runs locally; remote board integration and task creation are not available.
 
@@ -111,7 +111,7 @@ Use synthetic example records only. Do not commit employer workbooks, customer n
 
 **English** | [Português](#português)
 
-Projeto em Python para conciliar movimentações operacionais mensais com uma referência de programação. A etapa pública atual implementa validação de planilhas Excel, descoberta determinística de arquivos locais, regras de domínio, comparação e geração local de relatórios. A orquestração da aplicação está sendo adicionada em uma branch de desenvolvimento separada e ainda não faz parte da base desta branch de documentação.
+Projeto em Python para conciliar movimentações operacionais mensais com uma referência de programação. Ele demonstra contratos explícitos de dados Excel, descoberta determinística de arquivos locais, regras de domínio, comparação e geração estruturada de relatórios. Seu desenho prioriza a reprodução local e mantém integrações com serviços externos fora do escopo atual.
 
 > Este é um projeto educacional independente. Ele não contém dados de empregadores, credenciais, identificadores de quadros ou conexões com ambientes Microsoft 365 ou Monday.com de empregadores. O fluxo implementado é local; integração com quadros remotos e criação de tarefas não estão disponíveis.
 
