@@ -4,15 +4,17 @@ This document describes the security boundaries of the current implementation an
 
 ## Current security scope
 
-The implemented workflow runs locally. It receives directory paths and dates, reads Excel workbooks, calculates the reconciliation, and writes a report to the supplied path.
+The implemented workflow runs locally. It receives directory paths and dates, reads Excel workbooks, calculates the reconciliation, and writes a report to the supplied path. Optionally, it can update a simulated task board in a local JSON file.
 
 The current implementation:
 
 - Does not authenticate with Microsoft 365, SharePoint, OneDrive, or Monday.com.
 - Does not upload workbooks to remote services.
-- Does not create tasks or items on external boards.
+- Does not create tasks or items on external boards; the only available task creation is the optional local simulation.
 - Does not store credentials or tokens for remote connectors.
 - Does not schedule executions or perform the planned monthly close.
+
+When `--task-board` is used, the local JSON file contains task titles and internal metadata with normalized company names and competences. This information may be sensitive. Use only synthetic data in demonstrations, store the file in an appropriately restricted folder, and do not commit it to Git. The default `local-state/` folder is ignored by `.gitignore`; alternate paths must be protected by the user.
 
 File discovery examines only files directly inside the supplied directories. It does not recurse into subdirectories. Hidden files, Excel temporary files, empty files, and unsupported extensions are ignored. A non-empty candidate workbook that fails validation stops discovery with an explicit error.
 
