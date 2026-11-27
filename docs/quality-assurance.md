@@ -14,10 +14,10 @@ Este documento descreve como a qualidade é verificada localmente e na integraç
 
 Os testes estão separados em duas camadas:
 
-- **Unitários — tests/unit/:** verificam regras e componentes isolados, incluindo normalização, consolidação, comparação, leitura Excel, descoberta, geração de relatórios e orquestração da aplicação.
+- **Unitários — tests/unit/:** verificam regras e componentes isolados, incluindo normalização, consolidação, comparação, leitura Excel, descoberta, geração de relatórios, orquestração da aplicação e parsing/execução da CLI.
 - **Integração — tests/integration/:** verificam fluxos que conectam componentes reais. Incluem a passagem de Excel para comparação e o fluxo completo de arquivos de entrada até o relatório final.
 
-O teste test_application_workflow_integration.py cria planilhas sintéticas em diretórios temporários e executa a função de aplicação sem substituir os componentes por mocks. Ele verifica as classificações, os totais, as sete abas do relatório e se as planilhas originais permanecem inalteradas.
+Os testes da CLI verificam parsing de datas, argumentos obrigatórios, execução da aplicação e mensagens de erro. O teste test_application_workflow_integration.py cria planilhas sintéticas em diretórios temporários e executa a função de aplicação sem substituir os componentes por mocks. Ele verifica as classificações, os totais, as sete abas do relatório e se as planilhas originais permanecem inalteradas.
 
 ## Executar localmente
 
