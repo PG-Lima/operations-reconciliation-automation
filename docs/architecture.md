@@ -1,57 +1,88 @@
-# Arquitetura — Projeto Inicial
+# Arquitetura — Automação de Conciliação Operacional
 
-O projeto está sendo reconstruído como uma aplicação Python independente e organizada em camadas. O script original serve apenas como referência comportamental; nenhum caminho interno, planilha, conta, ID de quadro, token ou configuração de endpoint corporativo será reutilizado.
+O projeto é uma aplicação Python independente, organizada em camadas, para conciliar movimentações operacionais com uma referência de programação. O script original é utilizado apenas como referência comportamental. Caminhos internos, planilhas corporativas, credenciais, identificadores de quadros e configurações de serviços externos não fazem parte desta implementação pública.
 
-## Camadas
+## Visão geral
 
-- **Domínio:** modelos tipados imutáveis e classificações de negócio.
-- **Serviços:** regras puras de normalização, consolidação e comparação.
-- **Adaptadores:** leitura, descoberta de arquivos e geração de relatórios Excel locais estão implementadas. O gateway de quadro simulado permanece para uma etapa futura.
-- **Aplicação (próxima etapa):** orquestração da execução diária e do fechamento mensal.
-- **CLI (próxima etapa):** comandos explícitos para demonstração, comparação diária e fechamento mensal.
+A execução local é coordenada por `application/reconciliation.py`, por meio da função `run_reconciliation()`. Ela recebe os diretórios das planilhas de movimentação e referência, a competência, a data de corte e o caminho do relatório de saída. A data de avaliação é opcional.
+
+O fluxo atual segue estas etapas:
+
+1. Validar a relação entre a competência, a data de corte e a data de avaliação.
+2. Descobrir as planilhas de movimentação e referência correspondentes.
+3. Ler e validar os dados dos arquivos selecionados.
+4. Consolidar as movimentações liberadas.
+5. Comparar os resultados com a referência e aplicar as classificações do domínio.
+6. Gerar o relatório Excel no destino informado.
+7. Retornar um `ReconciliationResult` com os caminhos dos arquivos selecionados, o resultado da comparação e o caminho do relatório.
+
+## Camadas da aplicação
+
+- **Domínio (`domain/`):** modelos tipados e imutáveis que representam os dados e resultados da conciliação.
+- **Serviços (`services/`):** regras de normalização, consolidação de movimentações e comparação. As regras não dependem de arquivos Excel ou serviços externos.
+- **Adaptadores (`adapters/`):** leitura e validação das planilhas Excel, descoberta de arquivos locais e geração do relatório Excel.
+- **Aplicação (`application/`):** coordena os adaptadores e serviços para executar o fluxo completo de uma conciliação local.
+- **CLI:** uma interface de linha de comando ainda não está implementada. Comandos para demonstração e execução orientada permanecem planejados.
 
 ## Adaptador de entrada Excel
 
-O módulo `adapters/excel_reader.py` converte arquivos externos em modelos tipados do domínio. O leitor de movimentações aceita `.xls`, `.xlsx`, `.xlsm` e exportações HTML do Excel identificadas pelo conteúdo; o leitor da referência espera a aba `Referencia_Principal` e cabeçalho na linha 5 por padrão. Cabeçalhos são localizados por nomes normalizados ou prefixos definidos no contrato de dados. A camada de domínio não depende do Pandas nem conhece nomes de arquivos ou abas.
+O módulo `adapters/excel_reader.py` converte os arquivos de origem em modelos tipados do domínio.
+
+O leitor de movimentações aceita arquivos `.xls`, `.xlsx` e `.xlsm`. Também reconhece exportações HTML do Excel identificadas pelo conteúdo, mesmo quando salvas com a extensão `.xls`.
+
+O leitor da referência espera a planilha `Referencia_Principal` e utiliza a linha 5 como cabeçalho por padrão. Os cabeçalhos são identificados por nomes normalizados ou pelos prefixos definidos no contrato de dados.
+
+A camada de domínio não depende do Pandas e não precisa conhecer nomes de arquivos, abas ou detalhes de apresentação das planilhas.
 
 ## Adaptador de saída do relatório Excel
 
-O módulo `adapters/excel_report.py` serializa um `ComparisonReport` já calculado em um arquivo `.xlsx` no caminho local informado pelo chamador. Ele cria a pasta de destino quando necessário e gera as abas `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`. O adaptador não recalcula classificações, não modifica as planilhas de entrada e não acessa serviços externos.
+O módulo `adapters/excel_report.py` transforma um `ComparisonReport` já calculado em um arquivo `.xlsx` no caminho local informado pelo chamador.
+
+O relatório contém sete planilhas: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`.
+
+O adaptador cria o diretório de destino quando necessário. Ele não recalcula classificações, não altera as planilhas de entrada e não acessa serviços externos.
 
 ## Descoberta de arquivos Excel
 
-O módulo `adapters/file_discovery.py` procura somente arquivos diretamente na pasta local informada, sem percorrer subpastas. Arquivos ocultos, arquivos temporários do Excel (`~# Arquitetura — Projeto Inicial
+O módulo `adapters/file_discovery.py` procura arquivos somente no diretório local informado, sem percorrer subpastas.
 
-O projeto está sendo reconstruído como uma aplicação Python independente e organizada em camadas. O script original serve apenas como referência comportamental; nenhum caminho interno, planilha, conta, ID de quadro, token ou configuração de endpoint corporativo será reutilizado.
+Arquivos ocultos, arquivos temporários do Excel, arquivos vazios e extensões não suportadas são ignorados. Uma planilha candidata não vazia que falhar na validação interrompe a descoberta e informa o nome do arquivo.
 
-## Camadas
+Para as movimentações, são considerados os registros liberados cuja data de liberação pertence à competência solicitada. A seleção prioriza a maior data de liberação; a data de modificação do arquivo é utilizada apenas como critério de desempate. Se os critérios continuarem empatados, a descoberta falha por ambiguidade.
 
-- **Domínio:** modelos tipados imutáveis e classificações de negócio.
-- **Serviços:** regras puras de normalização, consolidação e comparação.
-- **Adaptadores:** os leitores de movimentações e referência Excel e o gerador de relatório Excel local estão implementados. O gateway de quadro simulado permanece para uma etapa futura.
-- **Aplicação (próxima etapa):** orquestração da execução diária e do fechamento mensal.
-- **CLI (próxima etapa):** comandos explícitos para demonstração, comparação diária e fechamento mensal.
+Para a referência, a competência extraída do cabeçalho deve corresponder à competência solicitada, e deve existir exatamente um arquivo correspondente.
 
-## Adaptador de entrada Excel
+A descoberta recebe caminhos locais e datas explicitamente informados. Não pesquisa OneDrive, SharePoint ou outros serviços remotos, e não move, renomeia ou modifica arquivos.
 
-O módulo `adapters/excel_reader.py` converte arquivos externos em modelos tipados do domínio. O leitor de movimentações aceita `.xls`, `.xlsx`, `.xlsm` e exportações HTML do Excel identificadas pelo conteúdo; o leitor da referência espera a aba `Referencia_Principal` e cabeçalho na linha 5 por padrão. Cabeçalhos são localizados por nomes normalizados ou prefixos definidos no contrato de dados. A camada de domínio não depende do Pandas nem conhece nomes de arquivos ou abas.
+## Orquestração de uma execução
 
-## Adaptador de saída do relatório Excel
+A função `run_reconciliation()` coordena o fluxo descrito nesta documentação. A data de avaliação, quando omitida, assume o valor da data de corte.
 
-O módulo `adapters/excel_report.py` serializa um `ComparisonReport` já calculado em um arquivo `.xlsx` no caminho local informado pelo chamador. Ele cria a pasta de destino quando necessário e gera as abas `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`. O adaptador não recalcula classificações, não modifica as planilhas de entrada e não acessa serviços externos.
+A aplicação rejeita:
+- Uma data de corte cuja competência não corresponda à competência solicitada.
+- Uma data de avaliação anterior à data de corte.
+- Um caminho de saída que sobrescreveria uma das planilhas de entrada.
 
-), arquivos vazios e extensões não suportadas são ignorados. Uma planilha candidata não vazia que falhar na validação interrompe a descoberta com o nome do arquivo no erro.
+Ao concluir, a função retorna um `ReconciliationResult` com as planilhas selecionadas, o relatório de comparação e o caminho do arquivo de saída.
 
-Para movimentações, a seleção considera apenas registros liberados cuja Data da Liberação pertence à competência solicitada. Vence o arquivo com a maior data de liberação; a data de modificação do arquivo é usada somente como desempate. Se ambos os critérios empatarem, a descoberta falha por ambiguidade. Para referências, a competência extraída do cabeçalho deve corresponder ao mês solicitado e deve existir exatamente um arquivo correspondente.
+## Limites da implementação atual
 
-A descoberta recebe caminhos locais e datas explicitamente informados. Ela não pesquisa OneDrive, SharePoint ou qualquer serviço remoto, e não move, renomeia ou modifica arquivos.
+A execução é local e depende dos diretórios e das datas fornecidos pelo chamador. O projeto não realiza autenticação em serviços remotos, não acessa diretamente ambientes Microsoft 365 ou Monday.com e não cria tarefas em quadros externos.
 
-## Limites planejados
+A aplicação não agenda execuções, não implementa fechamento mensal e não promove ou arquiva planilhas de referência. Também não possui uma CLI nesta etapa.
 
-A pasta de origem será configurada pelo usuário e representada por um caminho local na demonstração. Esse caminho pode apontar para uma pasta sincronizada por um cliente de nuvem, mas a demonstração não fará login nem conexão com um tenant real do Microsoft 365. Relatórios e histórico serão gravados em uma pasta local de saída.
+As planilhas de origem são utilizadas para leitura e não devem ser modificadas pelo fluxo de conciliação. A geração do relatório ocorre em um caminho de saída separado, e a aplicação impede que esse caminho sobrescreva os arquivos de entrada selecionados.
 
-O adaptador do quadro de tarefas será um simulador local por padrão. A aplicação dependerá de um protocolo pequeno, permitindo introduzir um provedor real futuramente sem colocar chamadas de API dentro das regras de negócio. A demonstração pública inicial não criará tarefas em uma conta real do Monday.com.
+## Próximas etapas planejadas
 
-## Segurança do fechamento mensal
+As evoluções previstas incluem uma CLI para facilitar a execução reproduzível, um adaptador local simulado para representar operações em um quadro de tarefas e um fluxo de fechamento mensal com arquivamento e promoção controlada da referência.
 
-O fechamento precisa ser repetível após falhas parciais. A geração do relatório e o processamento de tarefas ocorrem antes da promoção da referência. A criação de tarefas é idempotente usando empresa normalizada mais competência. A promoção da referência utiliza uma planilha temporária validada e preserva a versão anterior no histórico. Se a validação da entrada ou o processamento das tarefas falhar, a referência vigente deve continuar disponível para nova tentativa.
+Essas funcionalidades são planejamento e não fazem parte do fluxo implementado atualmente.
+
+## Diretrizes planejadas para o fechamento mensal
+
+Quando o fechamento mensal for implementado, deverá ser repetível após falhas parciais. A referência vigente deverá permanecer disponível caso a validação dos dados ou o processamento de tarefas falhe.
+
+O desenho previsto inclui validar uma planilha temporária antes da promoção da referência, preservar a versão anterior no histórico e tornar a criação de tarefas idempotente, utilizando uma chave de negócio formada pela empresa normalizada e pela competência.
+
+Essas são diretrizes para uma etapa futura, não garantias de comportamento da implementação atual.

@@ -4,9 +4,16 @@
 
 **English** | [Português](#português)
 
-A Python demonstration project for reconciling monthly operational releases against a reference schedule. It consolidates released records, classifies companies after their scheduled deadlines, generates Excel reports, and demonstrates task creation through a safe local work-board adapter.
+A Python project that demonstrates a reproducible, local workflow for reconciling monthly operational releases against a reference schedule. It validates and discovers Excel workbooks, consolidates released records, compares companies against scheduled quantities and dates, and generates a structured Excel report.
 
-> This is an independent educational demo. It does not contain company data, credentials, board identifiers, or connections to any employer's Microsoft 365 or Monday.com environment. The work-board integration will use a local mock by default; no real items are created.
+> This is an independent educational project. It contains no employer data, credentials, board identifiers, or connections to any employer's Microsoft 365 or Monday.com environment. The current workflow runs locally; remote board integration and task creation are not implemented.
+
+## Project purpose
+
+This repository has two equally important goals:
+
+- **Professional portfolio:** demonstrate practical skills in Python, data validation, domain modeling, layered architecture, Excel automation, orchestration, and automated testing.
+- **Open learning resource:** allow readers to study the implementation, reproduce the workflow with synthetic data, understand the design decisions, and adapt the ideas to other contexts and data contracts.
 
 ## Current scope
 
@@ -21,8 +28,8 @@ A Python demonstration project for reconciling monthly operational releases agai
 - Validate required columns, dates, quantities, and duplicate company keys before processing.
 - Generate a local Excel report with seven worksheets: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas`.
 - Discover movement and reference workbooks from explicitly configured local folders using deterministic selection rules.
-- Keep the local mock work-board workflow and monthly orchestration for later milestones.
-- Support month closing, reference archiving, and promotion through a controlled, testable workflow in later milestones.
+- Orchestrate a complete local reconciliation run from explicitly supplied folders, competence, and dates.
+- Keep local task-board simulation, monthly closing, reference archiving, and reference promotion as planned future milestones.
 
 ## Requirements
 
@@ -56,13 +63,14 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-The current milestone implements the core domain rules, Excel input and report adapters, and deterministic discovery of local movement and reference workbooks. Local board simulation and monthly orchestration remain planned.
+The current implementation includes the core domain rules, Excel input and report adapters, deterministic local workbook discovery, and single-run reconciliation orchestration. Local task-board simulation and monthly close remain planned.
 
 ## Project structure
 
 ```text
 src/operations_reconciliation/
-├── adapters/     # Excel input and output adapters
+├── adapters/     # Excel input, output, and discovery adapters
+├── application/  # Reconciliation workflow orchestration
 ├── domain/       # Typed domain models
 └── services/     # Normalization, consolidation, comparison
 
@@ -88,9 +96,16 @@ Use synthetic example records only. Do not commit spreadsheets exported from an 
 <a id="português"></a>
 # Automação de Conciliação Operacional
 
-Projeto demonstrativo em Python para conciliar movimentações operacionais mensais com uma referência de programação. O sistema consolida registros liberados, classifica empresas após os prazos previstos, gera relatórios Excel e demonstra a criação de tarefas por meio de um quadro local simulado.
+Projeto em Python que demonstra um fluxo local e reproduzível para conciliar movimentações operacionais mensais com uma referência de programação. Ele valida e descobre planilhas Excel, consolida registros liberados, compara empresas com as quantidades e datas previstas e gera um relatório Excel estruturado.
 
-> Este é um projeto educacional independente. Ele não contém dados da empresa, credenciais, identificadores de quadros ou conexões com ambientes Microsoft 365 ou Monday.com de empregadores. A integração com o quadro utilizará um simulador local por padrão; nenhum item real será criado.
+> Este é um projeto educacional independente. Ele não contém dados corporativos, credenciais, identificadores de quadros ou conexões com ambientes Microsoft 365 ou Monday.com de empregadores. O fluxo atual é executado localmente; a integração com quadros remotos e a criação de tarefas ainda não foram implementadas.
+
+## Objetivos do projeto
+
+Este repositório tem dois objetivos igualmente importantes:
+
+- **Portfólio profissional:** demonstrar habilidades práticas em Python, validação de dados, modelagem de domínio, arquitetura em camadas, automação com Excel, orquestração e testes automatizados.
+- **Recurso aberto de aprendizagem:** permitir que outras pessoas estudem a implementação, reproduzam o fluxo com dados fictícios, compreendam as decisões de projeto e adaptem as ideias a outros contextos e contratos de dados.
 
 ## Escopo atual
 
@@ -103,8 +118,8 @@ Projeto demonstrativo em Python para conciliar movimentações operacionais mens
 - Ler a referência mensal na aba `Referencia_Principal`, com competência extraída do cabeçalho quando disponível.
 - Gerar localmente um relatório Excel com sete abas: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`.
 - Descobrir planilhas de movimentação e referência em pastas locais configuradas explicitamente, com critérios determinísticos de seleção.
-- Manter o quadro de tarefas simulado e a orquestração mensal para etapas futuras.
-- Implementar fechamento mensal, arquivamento e promoção da referência em um fluxo controlado e testável nas próximas etapas.
+- Orquestrar uma execução local completa a partir das pastas, competência e datas informadas, gerando o relatório Excel.
+- Manter a simulação local do quadro de tarefas, o fechamento mensal, o arquivamento e a promoção da referência como etapas futuras.
 
 ## Requisitos
 
@@ -138,7 +153,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-Esta etapa implementa e testa as regras centrais do domínio, os adaptadores de entrada Excel, a geração local de relatórios e a descoberta determinística de planilhas de movimentação e referência. A simulação local do quadro e a orquestração mensal permanecem planejadas.
+A implementação atual inclui as regras centrais do domínio, os adaptadores Excel, a descoberta determinística de planilhas locais e a orquestração de uma execução completa de conciliação. A simulação do quadro e o fechamento mensal permanecem planejados.
 
 ## Contratos de entrada Excel
 

@@ -1,57 +1,88 @@
-# Architecture — Initial Design
+# Architecture — Operations Reconciliation Automation
 
-The project is being rebuilt as an independent, layered Python application. The original script is a behavioral reference only; no employer-specific path, workbook, account, board ID, token, or endpoint configuration is reused.
+This project is an independent, layered Python application for reconciling operational movements against a reference schedule. The original script is used only as a behavioral reference. Employer-specific paths, corporate workbooks, credentials, board identifiers, and external service configurations are not part of this public implementation.
 
-## Layers
+## Overview
 
-- **Domain:** immutable typed models and business classifications.
-- **Services:** pure normalization, consolidation, and comparison rules.
-- **Adapters:** Excel input, local file discovery, and report output are implemented. The local mock work-board gateway remains planned.
-- **Application (next milestone):** daily run and monthly-close orchestration.
-- **CLI (next milestone):** explicit commands for demo, daily comparison, and monthly close.
+The local execution is coordinated by `application/reconciliation.py` through the `run_reconciliation()` function. It receives the movement and reference directories, the competence, the cutoff date, and the output report path. The evaluation date is optional.
+
+The current workflow follows these steps:
+
+1. Validate the relationship between the competence, cutoff date, and evaluation date.
+2. Discover the matching movement and reference workbooks.
+3. Read and validate the selected files.
+4. Consolidate released movements.
+5. Compare the results with the reference and apply domain classifications.
+6. Generate the Excel report at the supplied destination.
+7. Return a `ReconciliationResult` containing the selected file paths, comparison result, and report path.
+
+## Application layers
+
+- **Domain (`domain/`):** immutable typed models representing reconciliation data and results.
+- **Services (`services/`):** normalization, movement consolidation, and comparison rules. These rules do not depend on Excel files or external services.
+- **Adapters (`adapters/`):** Excel workbook reading and validation, local file discovery, and Excel report generation.
+- **Application (`application/`):** coordinates adapters and services to execute the complete local reconciliation workflow.
+- **CLI:** a command-line interface has not been implemented yet. Demo and guided execution commands remain planned.
 
 ## Excel input adapter
 
-The `adapters/excel_reader.py` module converts external files into typed domain models. The movement reader accepts `.xls`, `.xlsx`, `.xlsm`, and HTML-based Excel exports detected from their content; the reference reader expects the `Referencia_Principal` worksheet and uses row 5 as its default header row. Headers are resolved by normalized names or the documented prefixes. The domain layer does not depend on Pandas and does not know source filenames or worksheet names.
+The `adapters/excel_reader.py` module converts source files into typed domain models.
+
+The movement reader accepts `.xls`, `.xlsx`, and `.xlsm` files. It also recognizes HTML-based Excel exports by inspecting their content, including files saved with the `.xls` extension.
+
+The reference reader expects the `Referencia_Principal` worksheet and uses row 5 as the default header row. Headers are identified by normalized names or by the prefixes defined in the data contract.
+
+The domain layer does not depend on Pandas and does not need to know workbook filenames, worksheet names, or spreadsheet presentation details.
 
 ## Excel report output adapter
 
-The `adapters/excel_report.py` module serializes an already-computed `ComparisonReport` to an `.xlsx` file at the caller-supplied local path. It creates the destination directory when needed and writes the `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas` worksheets. The adapter does not recalculate classifications, modify input workbooks, or access external services.
+The `adapters/excel_report.py` module serializes an already-computed `ComparisonReport` into an `.xlsx` file at the local path supplied by the caller.
+
+The report contains seven worksheets: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas`.
+
+The adapter creates the destination directory when needed. It does not recalculate classifications, modify input workbooks, or access external services.
 
 ## Excel file discovery
 
-The `adapters/file_discovery.py` module scans only the direct children of the supplied local directory; it does not recurse into subdirectories. Hidden files, Excel lock files (`~# Architecture — Initial Design
+The `adapters/file_discovery.py` module scans only the supplied local directory and does not recurse into subdirectories.
 
-The project is being rebuilt as an independent, layered Python application. The original script is a behavioral reference only; no employer-specific path, workbook, account, board ID, token, or endpoint configuration is reused.
+Hidden files, Excel temporary files, empty files, and unsupported extensions are ignored. A non-empty candidate workbook that fails validation stops discovery and reports the filename.
 
-## Layers
+For movement workbooks, only released records whose release date belongs to the requested competence are considered. Selection prioritizes the latest release date; file modification time is used only as a tie-breaker. If the criteria are still tied, discovery fails as ambiguous.
 
-- **Domain:** immutable typed models and business classifications.
-- **Services:** pure normalization, consolidation, and comparison rules.
-- **Adapters:** movement and reference Excel input readers and the local Excel report writer are implemented. The local mock work-board gateway remains planned.
-- **Application (next milestone):** daily run and monthly-close orchestration.
-- **CLI (next milestone):** explicit commands for demo, daily comparison, and monthly close.
+For the reference workbook, the competence extracted from the header must match the requested competence, and exactly one matching file must exist.
 
-## Excel input adapter
+Discovery receives explicitly supplied local paths and dates. It does not search OneDrive, SharePoint, or other remote services, and it does not move, rename, or modify files.
 
-The `adapters/excel_reader.py` module converts external files into typed domain models. The movement reader accepts `.xls`, `.xlsx`, `.xlsm`, and HTML-based Excel exports detected from their content; the reference reader expects the `Referencia_Principal` worksheet and uses row 5 as its default header row. Headers are resolved by normalized names or the documented prefixes. The domain layer does not depend on Pandas and does not know source filenames or worksheet names.
+## Single-run orchestration
 
-## Excel report output adapter
+The `run_reconciliation()` function coordinates the workflow described in this document. When omitted, the evaluation date defaults to the cutoff date.
 
-The `adapters/excel_report.py` module serializes an already-computed `ComparisonReport` to an `.xlsx` file at the caller-supplied local path. It creates the destination directory when needed and writes the `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas` worksheets. The adapter does not recalculate classifications, modify input workbooks, or access external services.
+The application rejects:
+- A cutoff date whose competence does not match the requested competence.
+- An evaluation date earlier than the cutoff date.
+- An output path that would overwrite either selected input workbook.
 
-), empty files, and unsupported extensions are ignored. A non-empty candidate workbook that fails validation stops discovery and reports the filename.
+On completion, the function returns a `ReconciliationResult` containing the selected workbooks, the comparison report, and the output file path.
 
-Movement discovery considers only released records whose Release Date belongs to the requested competence. The workbook with the latest release date wins; file modification time is used only as a tie-breaker. If both criteria tie, discovery fails as ambiguous. Reference discovery requires the competence extracted from the workbook header to match the requested month and requires exactly one matching workbook.
+## Current implementation boundaries
 
-Discovery accepts explicitly supplied local paths and dates. It does not search OneDrive, SharePoint, or any remote service, and it never moves, renames, or modifies source files.
+Execution is local and depends on the directories and dates supplied by the caller. The project does not authenticate with remote services, directly access Microsoft 365 or Monday.com environments, or create tasks on external boards.
 
-## Planned boundaries
+The application does not schedule runs, implement monthly closing, or promote or archive reference workbooks. A CLI is also not available in this milestone.
 
-The source folder will be configured by the user and represented by a local path in the demo. That path can represent a folder synchronized by a cloud client, but this demo does not sign in to or connect to a real Microsoft 365 tenant. Reports and history are written to a local output directory.
+Source workbooks are read by the reconciliation workflow and should not be modified. The report is generated at a separate output path, and the application prevents that path from overwriting the selected input files.
 
-The task-board adapter will be a local mock by default. The core application will depend on a narrow protocol so a real provider could be introduced later without embedding API calls in business rules. The initial public demo will not create tasks in a real Monday.com account.
+## Planned next steps
 
-## Monthly close safety
+Planned extensions include a CLI to make execution easier to reproduce, a local mock adapter to represent task-board operations, and a monthly closing workflow with controlled reference archiving and promotion.
 
-The monthly close must be repeatable after partial failures. Report generation and task creation happen before reference promotion. Task creation is idempotent using normalized company plus competency. Reference promotion uses a validated temporary workbook and preserves the prior version in history. If input validation or task processing fails, the current reference must remain available for retry.
+These features are planned and are not part of the currently implemented workflow.
+
+## Planned monthly-close safeguards
+
+When monthly closing is implemented, it should be repeatable after partial failures. The current reference should remain available if data validation or task processing fails.
+
+The proposed design includes validating a temporary workbook before promoting the reference, preserving the previous version in history, and making task creation idempotent through a business key composed of the normalized company and competence.
+
+These are design guidelines for a future milestone, not guarantees provided by the current implementation.
