@@ -55,7 +55,7 @@ python -m pip install -e ".[dev]"
 
 ## Reproduzir o fluxo completo
 
-Nesta etapa, o projeto ainda não possui uma CLI nem um comando de demonstração independente. O caminho reproduzível de ponta a ponta é o teste de integração:
+O fluxo pode ser executado pela CLI com planilhas fictícias que atendam aos contratos descritos neste guia. O teste de integração também permanece disponível como demonstração reproduzível de ponta a ponta:
 
 ```bash
 python -m pytest tests/integration/test_application_workflow_integration.py -v
@@ -72,6 +72,18 @@ O cenário de teste usa:
 - Uma empresa nova, ausente da referência, com 5 unidades liberadas.
 
 A execução considera competência novembro de 2026, data de corte em 12 de novembro e data de avaliação em 13 de novembro. O teste verifica as classificações, os totais, as sete abas do relatório e a preservação dos arquivos de origem.
+
+## Executar pela linha de comando
+
+Com o ambiente virtual ativo e o projeto instalado com `python -m pip install -e ".[dev]"`, execute o comando abaixo no PowerShell, ajustando os diretórios e datas para os arquivos fictícios preparados:
+
+```powershell
+operations-reconciliation reconcile --movement-dir "examples/data/movements" --reference-dir "examples/data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+```
+
+A competência usa `YYYY-MM`; as datas usam `YYYY-MM-DD`. A data de avaliação pode ser omitida, caso em que será utilizada a data de corte. O comando imprime os caminhos dos arquivos selecionados e do relatório gerado. Ele não cria as planilhas de entrada: os diretórios e arquivos devem existir e seguir os contratos deste guia.
+
+Consulte [Interface de linha de comando](cli.md) para ver todos os argumentos e códigos de saída.
 
 ## Entender os contratos das planilhas
 
@@ -178,6 +190,6 @@ Não reutilize dados reais de empregadores ou clientes nos exemplos, testes ou c
 
 ## Limites atuais
 
-O fluxo documentado é local. Não há CLI, agendamento, integração com Monday.com, criação de tarefas, fechamento mensal automático ou promoção de referência implementados nesta etapa. Esses itens são planejados e não devem ser tratados como funcionalidades disponíveis.
+O fluxo documentado é local. Não há agendamento, integração com Monday.com, criação de tarefas, fechamento mensal automático ou promoção de referência implementados nesta etapa. Esses itens são planejados e não devem ser tratados como funcionalidades disponíveis.
 
-O teste de integração é a demonstração reproduzível de referência até que um exemplo executável independente seja adicionado ao projeto.
+A CLI executa o fluxo com planilhas fornecidas pelo usuário; o teste de integração continua sendo a demonstração autossuficiente que cria os próprios arquivos sintéticos.
