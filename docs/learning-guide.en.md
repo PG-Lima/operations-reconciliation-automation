@@ -55,7 +55,7 @@ python -m pip install -e ".[dev]"
 
 ## Reproduce the complete workflow
 
-At this milestone, the project does not yet provide a CLI or a standalone demo command. The reproducible end-to-end entry point is the integration test:
+The workflow can be executed through the CLI with synthetic workbooks that satisfy the contracts described in this guide. The integration test also remains available as a reproducible end-to-end demonstration:
 
 ```bash
 python -m pytest tests/integration/test_application_workflow_integration.py -v
@@ -72,6 +72,18 @@ The test scenario uses:
 - A new company, absent from the reference, with 5 released units.
 
 The run uses November 2026 as the competence, November 12 as the cutoff date, and November 13 as the evaluation date. The test checks classifications, totals, all seven report worksheets, and preservation of the source workbooks.
+
+## Run from the command line
+
+With the virtual environment active and the project installed using `python -m pip install -e ".[dev]"`, run this command in PowerShell, adjusting the folders and dates to match the synthetic workbooks you prepared:
+
+```powershell
+operations-reconciliation reconcile --movement-dir "examples/data/movements" --reference-dir "examples/data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+```
+
+Competence uses `YYYY-MM`; dates use `YYYY-MM-DD`. The evaluation date may be omitted, in which case the cutoff date is used. The command prints the paths of the selected workbooks and the generated report. It does not create input workbooks: the directories and files must exist and follow this guide's contracts.
+
+See the [Command-line interface guide](cli.en.md) for all arguments and exit codes.
 
 ## Understand the workbook contracts
 
@@ -178,6 +190,6 @@ Do not reuse real employer or customer data in examples, tests, or commits. See 
 
 ## Current limitations
 
-The documented workflow runs locally. A CLI, scheduling, Monday.com integration, task creation, automatic monthly closing, and reference promotion are not implemented in this milestone. These items are planned and must not be treated as available features.
+The documented workflow runs locally. Scheduling, Monday.com integration, task creation, automatic monthly closing, and reference promotion are not implemented in this milestone. These items are planned and must not be treated as available features.
 
-The integration test is the reference reproducible demonstration until a standalone executable example is added to the project.
+The CLI runs the workflow with user-supplied workbooks; the integration test remains the self-contained demonstration that creates its own synthetic files.
