@@ -58,7 +58,7 @@ A função `run_reconciliation()` coordena uma execução local completa:
 4. O caminho de saída não pode corresponder ao caminho de uma das planilhas de entrada selecionadas.
 5. A função retorna um `ReconciliationResult` com os caminhos dos arquivos selecionados, o resultado da comparação e o caminho do relatório.
 
-Essa orquestração é local. Ela não agenda execuções, não cria tarefas em quadros, não promove referências e não acessa serviços remotos.
+Essa orquestração é local. A criação de tarefas simuladas ocorre somente quando um caminho `--task-board` é fornecido. O fluxo não agenda execuções, não cria tarefas em quadros externos, não promove referências e não acessa serviços remotos.
 
 ## Relatório Excel
 
@@ -81,12 +81,13 @@ As regras abaixo descrevem uma evolução futura e não fazem parte do fluxo imp
 6. A nova referência conterá empresas com pelo menos um registro liberado no mês fechado. Empresas sem movimentação serão removidas; empresas novas serão adicionadas.
 7. Se não for possível selecionar ou validar uma fonte de fechamento, a referência vigente será preservada e a comparação da nova competência será interrompida.
 
-## Integração com quadro de tarefas — fluxo planejado
+## Simulação local do quadro de tarefas
 
-As regras abaixo são propostas para uma futura integração. Nenhum quadro ou conector de API é utilizado pela implementação atual.
-
-1. Somente empresas classificadas como `Menor` gerarão tarefas.
-2. O título da tarefa conterá empresa e competência; esse par será a chave de deduplicação.
-3. Tarefas existentes serão ignoradas, inclusive quando uma execução anterior terminar parcialmente.
-4. A tarefa será criada somente com o título; outras colunas não serão preenchidas.
-5. Testes automatizados e demonstrações futuras deverão utilizar um quadro simulado local. Um conector de API real não faz parte da etapa atual.
+1. A simulação é opcional e só é executada quando o chamador fornece um caminho JSON por meio do argumento `--task-board` ou de `task_board_path` na aplicação.
+2. Somente empresas classificadas como `Menor` geram tarefas. Empresas `Aguardando`, `Igual`, `Maior`, `Não pagou` e `Sem referência` não geram tarefas.
+3. O título visível contém o nome da empresa e a competência no formato `Empresa - YYYY-MM`.
+4. A chave interna de deduplicação é formada pelo nome normalizado da empresa e pela competência `YYYY-MM`. Reexecuções ignoram chaves já existentes, inclusive após uma execução anterior interrompida.
+5. A tarefa visível contém somente o título. A chave da empresa e a competência são metadados internos necessários para a deduplicação, não campos de tarefa adicionais.
+6. O quadro é persistido em JSON local, usa versão de esquema e grava atualizações por substituição atômica do arquivo temporário.
+7. Um arquivo JSON inválido, corrompido ou com identidades duplicadas interrompe a execução; o simulador não descarta silenciosamente o estado existente.
+8. A simulação não acessa APIs, não autentica em Monday.com e não cria tarefas em quadros externos. O arquivo local deve ser protegido e não deve conter dados reais de empregadores ou clientes.
