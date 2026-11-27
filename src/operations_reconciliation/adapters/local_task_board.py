@@ -109,9 +109,6 @@ class LocalTaskBoard:
                 raise ValueError(
                     f"Simulated task {index} has an invalid competence."
                 ) from error
-            if parsed_competence.strftime("%Y-%m") != competence:
-                raise ValueError(f"Simulated task {index} has an invalid competence.")
-
             key = (company_key, competence)
             if key in seen:
                 raise ValueError("Simulated task board contains duplicate task identities.")
