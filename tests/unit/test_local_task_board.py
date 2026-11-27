@@ -100,6 +100,18 @@ def test_reports_invalid_json(tmp_path: Path) -> None:
         local_task_board.LocalTaskBoard(storage).list_titles()
 
 
+@pytest.mark.parametrize("content", [b"\\xff", None])
+def test_reports_unreadable_board_files(tmp_path: Path, content: bytes | None) -> None:
+    storage = tmp_path / "board.json"
+    if content is None:
+        storage.mkdir()
+    else:
+        storage.write_bytes(content)
+
+    with pytest.raises(ValueError, match="Could not read simulated task board"):
+        local_task_board.LocalTaskBoard(storage).list_titles()
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -121,8 +133,12 @@ def test_rejects_invalid_board_schema(tmp_path: Path, payload: object) -> None:
     [
         "not-an-object",
         {"title": "", "identity": {"company_key": "ACME", "competence": "2026-11"}},
+        {"title": None, "identity": {"company_key": "ACME", "competence": "2026-11"}},
         {"title": "ACME - 2026-11", "identity": None},
         {"title": "ACME - 2026-11", "identity": {"company_key": "", "competence": "2026-11"}},
+        {"title": "ACME - 2026-11", "identity": {"company_key": None, "competence": "2026-11"}},
+        {"title": "ACME - 2026-11", "identity": {"company_key": "ACME", "competence": None}},
+        {"title": "ACME - 2026-11", "identity": {"company_key": "ACME", "competence": "2026-1"}},
         {"title": "ACME - 2026-11", "identity": {"company_key": "ACME", "competence": "2026/11"}},
         {"title": "ACME - 2026-11", "identity": {"company_key": "ACME", "competence": "2026-13"}},
     ],
@@ -177,3 +193,38 @@ def test_cleans_temporary_file_when_atomic_replace_fails(
     replace.assert_called_once()
     assert not storage.exists()
     assert tuple(tmp_path.glob(".board.json.*.tmp")) == ()
+
+def test_rejects_non_string_task_fields(tmp_path: Path) -> None:
+    board = local_task_board.LocalTaskBoard(tmp_path / "board.json")
+
+    with pytest.raises(ValueError, match="title"):
+        board.create_task(
+            None,  # type: ignore[arg-type]
+            company_key="ACME",
+            competence=date(2026, 11, 1),
+        )
+    with pytest.raises(ValueError, match="company key"):
+        board.create_task(
+            "ACME - 2026-11",
+            company_key=None,  # type: ignore[arg-type]
+            competence=date(2026, 11, 1),
+        )
+
+
+def test_cleans_up_when_temporary_file_cannot_be_created(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    create_temporary = Mock(side_effect=OSError("temporary storage unavailable"))
+    monkeypatch.setattr(local_task_board.tempfile, "NamedTemporaryFile", create_temporary)
+    board = local_task_board.LocalTaskBoard(tmp_path / "board.json")
+
+    with pytest.raises(OSError, match="temporary storage unavailable"):
+        board.create_task(
+            "ACME - 2026-11",
+            company_key="ACME",
+            competence=date(2026, 11, 1),
+        )
+
+    create_temporary.assert_called_once()
+    assert tuple(tmp_path.iterdir()) == ()
