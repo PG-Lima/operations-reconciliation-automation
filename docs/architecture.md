@@ -22,7 +22,7 @@ O fluxo atual segue estas etapas:
 - **Serviços (`services/`):** regras de normalização, consolidação de movimentações e comparação. As regras não dependem de arquivos Excel ou serviços externos.
 - **Adaptadores (`adapters/`):** leitura e validação das planilhas Excel, descoberta de arquivos locais e geração do relatório Excel.
 - **Aplicação (`application/`):** coordena os adaptadores e serviços para executar o fluxo completo de uma conciliação local.
-- **CLI:** uma interface de linha de comando ainda não está implementada. Comandos para demonstração e execução orientada permanecem planejados.
+- **CLI (`cli.py`):** interpreta os argumentos do terminal, valida o formato das datas e chama a função de aplicação sem duplicar regras de negócio.
 
 ## Adaptador de entrada Excel
 
@@ -65,17 +65,23 @@ A aplicação rejeita:
 
 Ao concluir, a função retorna um `ReconciliationResult` com as planilhas selecionadas, o relatório de comparação e o caminho do arquivo de saída.
 
+## Interface de linha de comando
+
+O entry point `operations-reconciliation` disponibiliza o subcomando `reconcile`. Ele recebe os diretórios de movimentações e referência, a competência no formato `YYYY-MM`, a data de corte, o caminho de saída e, opcionalmente, a data de avaliação.
+
+A CLI valida os formatos de entrada e delega o processamento para `run_reconciliation()`. Ela não implementa descoberta, leitura, comparação ou geração de planilhas por conta própria. O código de saída é `0` em caso de sucesso, `1` para falhas da execução e `2` para argumentos inválidos tratados pelo argparse.
+
 ## Limites da implementação atual
 
 A execução é local e depende dos diretórios e das datas fornecidos pelo chamador. O projeto não realiza autenticação em serviços remotos, não acessa diretamente ambientes Microsoft 365 ou Monday.com e não cria tarefas em quadros externos.
 
-A aplicação não agenda execuções, não implementa fechamento mensal e não promove ou arquiva planilhas de referência. Também não possui uma CLI nesta etapa.
+A aplicação não agenda execuções, não implementa fechamento mensal e não promove ou arquiva planilhas de referência.
 
 As planilhas de origem são utilizadas para leitura e não devem ser modificadas pelo fluxo de conciliação. A geração do relatório ocorre em um caminho de saída separado, e a aplicação impede que esse caminho sobrescreva os arquivos de entrada selecionados.
 
 ## Próximas etapas planejadas
 
-As evoluções previstas incluem uma CLI para facilitar a execução reproduzível, um adaptador local simulado para representar operações em um quadro de tarefas e um fluxo de fechamento mensal com arquivamento e promoção controlada da referência.
+As evoluções previstas incluem um adaptador local simulado para representar operações em um quadro de tarefas e um fluxo de fechamento mensal com arquivamento e promoção controlada da referência.
 
 Essas funcionalidades são planejamento e não fazem parte do fluxo implementado atualmente.
 
