@@ -104,7 +104,7 @@ class LocalTaskBoard:
                 raise ValueError(f"Simulated task {index} has an invalid identity.")
 
             try:
-                parsed_competence = date.fromisoformat(f"{competence}-01")
+                date.fromisoformat(f"{competence}-01")
             except ValueError as error:
                 raise ValueError(
                     f"Simulated task {index} has an invalid competence."
