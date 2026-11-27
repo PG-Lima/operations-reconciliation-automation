@@ -1,4 +1,4 @@
-﻿from datetime import date
+from datetime import date
 from unittest.mock import Mock
 
 import pytest
@@ -42,41 +42,13 @@ def _install_pipeline_mocks(monkeypatch, tmp_path):
         "write": Mock(return_value=output_file),
     }
 
-    monkeypatch.setattr(
-        reconciliation,
-        "discover_movement_workbook",
-        mocks["discover_movement"],
-    )
-    monkeypatch.setattr(
-        reconciliation,
-        "discover_reference_workbook",
-        mocks["discover_reference"],
-    )
-    monkeypatch.setattr(
-        reconciliation,
-        "read_movement_workbook",
-        mocks["read_movement"],
-    )
-    monkeypatch.setattr(
-        reconciliation,
-        "read_reference_workbook",
-        mocks["read_reference"],
-    )
-    monkeypatch.setattr(
-        reconciliation,
-        "consolidate_releases",
-        mocks["consolidate"],
-    )
-    monkeypatch.setattr(
-        reconciliation,
-        "compare_companies",
-        mocks["compare"],
-    )
-    monkeypatch.setattr(
-        reconciliation,
-        "write_comparison_report",
-        mocks["write"],
-    )
+    monkeypatch.setattr(reconciliation, "discover_movement_workbook", mocks["discover_movement"])
+    monkeypatch.setattr(reconciliation, "discover_reference_workbook", mocks["discover_reference"])
+    monkeypatch.setattr(reconciliation, "read_movement_workbook", mocks["read_movement"])
+    monkeypatch.setattr(reconciliation, "read_reference_workbook", mocks["read_reference"])
+    monkeypatch.setattr(reconciliation, "consolidate_releases", mocks["consolidate"])
+    monkeypatch.setattr(reconciliation, "compare_companies", mocks["compare"])
+    monkeypatch.setattr(reconciliation, "write_comparison_report", mocks["write"])
 
     return {
         "mocks": mocks,
@@ -115,40 +87,53 @@ def test_runs_complete_reconciliation_pipeline(
     )
 
     mocks = context["mocks"]
-
-    mocks["discover_movement"].assert_called_once_with(
-        tmp_path / "movements",
-        competence,
-    )
-    mocks["discover_reference"].assert_called_once_with(
-        tmp_path / "references",
-        competence,
-    )
-    mocks["read_movement"].assert_called_once_with(
-        context["movement_file"],
-    )
-    mocks["read_reference"].assert_called_once_with(
-        context["reference_file"],
-    )
-    mocks["consolidate"].assert_called_once_with(
-        context["records"],
-        cutoff_date,
-    )
+    mocks["discover_movement"].assert_called_once_with(tmp_path / "movements", competence)
+    mocks["discover_reference"].assert_called_once_with(tmp_path / "references", competence)
+    mocks["read_movement"].assert_called_once_with(context["movement_file"])
+    mocks["read_reference"].assert_called_once_with(context["reference_file"])
+    mocks["consolidate"].assert_called_once_with(context["records"], cutoff_date)
     mocks["compare"].assert_called_once_with(
         context["reference"].companies,
         context["movements"],
         cutoff_date,
         effective_evaluation,
     )
-    mocks["write"].assert_called_once_with(
-        context["report"],
-        output_path,
-    )
+    mocks["write"].assert_called_once_with(context["report"], output_path)
 
     assert result.movement_workbook == context["movement_file"]
     assert result.reference_workbook == context["reference_file"]
     assert result.report is context["report"]
     assert result.output_workbook == context["output_file"]
+    assert result.task_board_result is None
+
+
+def test_runs_optional_task_board_after_writing_report(
+    monkeypatch,
+    tmp_path,
+):
+    context = _install_pipeline_mocks(monkeypatch, tmp_path)
+    board = Mock()
+    board_factory = Mock(return_value=board)
+    task_result = Mock()
+    create_tasks = Mock(return_value=task_result)
+    monkeypatch.setattr(reconciliation, "LocalTaskBoard", board_factory)
+    monkeypatch.setattr(reconciliation, "create_underpaid_tasks", create_tasks)
+    competence = date(2026, 11, 1)
+    board_path = tmp_path / "tasks.json"
+
+    result = reconciliation.run_reconciliation(
+        tmp_path / "movements",
+        tmp_path / "references",
+        competence,
+        date(2026, 11, 15),
+        tmp_path / "report.xlsx",
+        task_board_path=board_path,
+    )
+
+    board_factory.assert_called_once_with(board_path)
+    create_tasks.assert_called_once_with(context["report"], competence, board)
+    assert result.task_board_result is task_result
+    context["mocks"]["write"].assert_called_once()
 
 
 def test_rejects_cutoff_outside_competence_before_discovery(
@@ -156,11 +141,7 @@ def test_rejects_cutoff_outside_competence_before_discovery(
     tmp_path,
 ):
     discover = Mock()
-    monkeypatch.setattr(
-        reconciliation,
-        "discover_movement_workbook",
-        discover,
-    )
+    monkeypatch.setattr(reconciliation, "discover_movement_workbook", discover)
 
     with pytest.raises(ValueError, match="Cutoff date must belong"):
         reconciliation.run_reconciliation(
@@ -179,11 +160,7 @@ def test_rejects_evaluation_before_cutoff_before_discovery(
     tmp_path,
 ):
     discover = Mock()
-    monkeypatch.setattr(
-        reconciliation,
-        "discover_movement_workbook",
-        discover,
-    )
+    monkeypatch.setattr(reconciliation, "discover_movement_workbook", discover)
 
     with pytest.raises(ValueError, match="Evaluation date cannot precede"):
         reconciliation.run_reconciliation(
