@@ -38,7 +38,7 @@ def test_parses_valid_iso_date() -> None:
     assert cli._parse_date("2026-11-12") == date(2026, 11, 12)
 
 
-@pytest.mark.parametrize("value", ["12/11/2026", "2026-02-30", "2026-1-2"])
+@pytest.mark.parametrize("value", ["12/11/2026", "2026-02-30", "2026-1-2", "20261112"])
 def test_rejects_invalid_iso_date(value: str) -> None:
     with pytest.raises(cli.argparse.ArgumentTypeError, match="YYYY-MM-DD"):
         cli._parse_date(value)
