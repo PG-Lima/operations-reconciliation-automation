@@ -1,44 +1,26 @@
 # Regras de Negócio — Conciliação
 
-Este documento registra as regras extraídas do fluxo operacional original e implementadas nas etapas de domínio, leitura Excel e geração do relatório. A nova implementação é independente e não utiliza dados reais de nenhuma empresa.
+Este documento registra as regras do fluxo de conciliação, distinguindo o comportamento implementado das regras propostas para etapas futuras. A implementação pública é independente e utiliza apenas dados fictícios.
 
 ## Entrada e elegibilidade
 
 1. O leitor de movimentações aceita `.xls`, `.xlsx` e `.xlsm`, além de HTML do Excel salvo com extensão `.xls`.
 2. A planilha de movimentações precisa conter `Contrato`, `Data da Liberação`, `Situação do Arquivo` e `Quantidade`; `Tipo da Carga` é opcional.
 3. A referência é lida da aba `Referencia_Principal`, com cabeçalho na linha 5 por padrão. São obrigatórias as colunas iniciadas por `Empresa`, `Quantidade consolidada` e `Dias de liberação observados`; `Carteira` é opcional.
-4. A competência da referência é extraída do mês/ano no cabeçalho `Quantidade consolidada (mmm/AAAA)`, quando reconhecido.
-5. Os nomes de cabeçalhos são comparados sem diferenciar acentos, caixa ou espaços externos; cabeçalhos duplicados após essa normalização são ambíguos e interrompem a leitura.
+4. A competência da referência é extraída do mês e ano no cabeçalho `Quantidade consolidada (mmm/AAAA)`, quando reconhecido.
+5. Os nomes dos cabeçalhos são comparados sem diferenciar acentos, caixa ou espaços externos. Cabeçalhos duplicados após essa normalização são ambíguos e interrompem a leitura.
 6. Quantidades de movimentação em texto podem usar o padrão brasileiro, por exemplo `1.234,50`.
 7. Somente registros com situação `LIBERADO` participam da consolidação.
 8. Contratos sem nome e linhas de resumo como `nan` ou `Total` são ignorados.
-9. Um registro `LIBERADO` com nome de empresa impossível de normalizar, quantidade inválida ou data de liberação inválida deve interromper o processamento, em vez de alterar os totais silenciosamente.
+9. Um registro `LIBERADO` com nome de empresa impossível de normalizar, quantidade inválida ou data de liberação inválida interrompe o processamento, em vez de alterar os totais silenciosamente.
 10. O período analisado começa no primeiro dia do mês da data de corte e termina na própria data de corte.
 11. A competência é determinada pela Data da Liberação. Um campo separado de mês da carga não a substitui.
 
 ## Descoberta de arquivos Excel
 
 1. A busca ocorre somente na pasta local informada, sem percorrer subpastas.
-2. Arquivos ocultos, temporários do Excel iniciados por `~# Regras de Negócio — Conciliação
-
-Este documento registra as regras extraídas do fluxo operacional original e implementadas nas etapas de domínio, leitura Excel e geração do relatório. A nova implementação é independente e não utiliza dados reais de nenhuma empresa.
-
-## Entrada e elegibilidade
-
-1. O leitor de movimentações aceita `.xls`, `.xlsx` e `.xlsm`, além de HTML do Excel salvo com extensão `.xls`.
-2. A planilha de movimentações precisa conter `Contrato`, `Data da Liberação`, `Situação do Arquivo` e `Quantidade`; `Tipo da Carga` é opcional.
-3. A referência é lida da aba `Referencia_Principal`, com cabeçalho na linha 5 por padrão. São obrigatórias as colunas iniciadas por `Empresa`, `Quantidade consolidada` e `Dias de liberação observados`; `Carteira` é opcional.
-4. A competência da referência é extraída do mês/ano no cabeçalho `Quantidade consolidada (mmm/AAAA)`, quando reconhecido.
-5. Os nomes de cabeçalhos são comparados sem diferenciar acentos, caixa ou espaços externos; cabeçalhos duplicados após essa normalização são ambíguos e interrompem a leitura.
-6. Quantidades de movimentação em texto podem usar o padrão brasileiro, por exemplo `1.234,50`.
-7. Somente registros com situação `LIBERADO` participam da consolidação.
-8. Contratos sem nome e linhas de resumo como `nan` ou `Total` são ignorados.
-9. Um registro `LIBERADO` com nome de empresa impossível de normalizar, quantidade inválida ou data de liberação inválida deve interromper o processamento, em vez de alterar os totais silenciosamente.
-10. O período analisado começa no primeiro dia do mês da data de corte e termina na própria data de corte.
-11. A competência é determinada pela Data da Liberação. Um campo separado de mês da carga não a substitui.
-
-, vazios e com extensão não suportada são ignorados.
-3. Uma planilha candidata não vazia que não puder ser lida ou validada interrompe a descoberta com erro que identifica o arquivo.
+2. Arquivos ocultos, arquivos temporários do Excel iniciados por `~$`, arquivos vazios e extensões não suportadas são ignorados.
+3. Uma planilha candidata não vazia que não puder ser lida ou validada interrompe a descoberta com um erro que identifica o arquivo.
 4. A descoberta de movimentações considera somente registros `LIBERADO` cuja Data da Liberação pertença à competência solicitada.
 5. A planilha de movimentações selecionada é a que contém a maior Data da Liberação dentro da competência. A data de modificação do arquivo é utilizada somente quando as maiores datas de liberação empatam.
 6. Se duas ou mais planilhas de movimentações empatarem tanto na maior Data da Liberação quanto na data de modificação, a descoberta é interrompida por ambiguidade.
@@ -47,7 +29,7 @@ Este documento registra as regras extraídas do fluxo operacional original e imp
 
 ## Consolidação
 
-1. A identidade da empresa é normalizada removendo acentos, pontuação, diferenças entre maiúsculas/minúsculas e espaços repetidos.
+1. A identidade da empresa é normalizada removendo acentos, pontuação, diferenças entre maiúsculas e minúsculas e espaços repetidos.
 2. As quantidades são somadas por empresa normalizada.
 3. A consolidação preserva as datas da primeira e da última liberação, os dias únicos de liberação, a quantidade de registros liberados e os tipos de carga únicos.
 4. O nome original da empresa é preservado para exibição; a chave normalizada é utilizada apenas para cruzamentos.
@@ -58,13 +40,25 @@ Este documento registra as regras extraídas do fluxo operacional original e imp
 2. Uma empresa ausente da referência é apresentada separadamente como `Sem referência`; ela não é comparada com uma quantidade esperada.
 3. O último dia previsto é o maior dia válido informado na referência. Um dia superior ao último dia do calendário é limitado ao último dia daquele mês.
 4. A empresa permanece como `Aguardando` durante o próprio último dia previsto. A classificação definitiva começa no dia seguinte.
-5. Quantidade esperada ausente/negativa ou dias previstos ausentes/inválidos resultam em `Aguardando`, com observação para revisão.
+5. Quantidade esperada ausente ou negativa, ou dias previstos ausentes ou inválidos, resultam em `Aguardando`, com observação para revisão.
 6. Depois do prazo:
    - `Igual`: quantidade liberada igual à esperada, dentro da tolerância de `1e-9`.
    - `Maior`: quantidade liberada acima da referência.
    - `Não pagou`: nenhuma liberação registrada.
    - `Menor`: houve liberação, mas o total ficou abaixo do esperado.
 7. Uma quantidade acima da referência não substitui o status `Aguardando` antes do prazo previsto.
+
+## Orquestração de uma execução
+
+A função `run_reconciliation()` coordena uma execução local completa:
+
+1. A data de corte deve pertencer à competência solicitada.
+2. A data de avaliação, quando informada, não pode ser anterior à data de corte. Quando omitida, assume a data de corte.
+3. A aplicação descobre as planilhas correspondentes, lê e valida os dados, consolida as movimentações, executa a comparação e gera o relatório.
+4. O caminho de saída não pode corresponder ao caminho de uma das planilhas de entrada selecionadas.
+5. A função retorna um `ReconciliationResult` com os caminhos dos arquivos selecionados, o resultado da comparação e o caminho do relatório.
+
+Essa orquestração é local. Ela não agenda execuções, não cria tarefas em quadros, não promove referências e não acessa serviços remotos.
 
 ## Relatório Excel
 
@@ -77,18 +71,22 @@ Este documento registra as regras extraídas do fluxo operacional original e imp
 
 ## Fechamento mensal — fluxo planejado
 
-1. A competência anterior é fechada na primeira segunda-feira do novo mês ou na primeira execução posterior, caso a máquina agendada estivesse indisponível.
-2. A planilha de fechamento é selecionada pela maior Data da Liberação válida dentro da competência; a data de modificação do arquivo é apenas critério de desempate.
-3. A maior data real de liberação define o corte. Não é necessário haver movimentação no último dia do calendário.
-4. A competência é avaliada no primeiro dia do mês seguinte, garantindo que o último dia previsto já tenha passado.
-5. O relatório final é gerado e os itens `Menor` são processados antes da promoção da nova referência mensal.
-6. A nova referência contém empresas com pelo menos um registro liberado no mês fechado. Empresas sem movimentação são removidas; empresas novas são adicionadas.
-7. Se não for possível selecionar ou validar uma fonte de fechamento, a referência vigente é preservada e a comparação da nova competência é interrompida.
+As regras abaixo descrevem uma evolução futura e não fazem parte do fluxo implementado atualmente.
+
+1. A competência anterior será fechada na primeira segunda-feira do novo mês ou na primeira execução posterior, caso a máquina agendada estivesse indisponível.
+2. A planilha de fechamento será selecionada pela maior Data da Liberação válida dentro da competência; a data de modificação do arquivo será apenas critério de desempate.
+3. A maior data real de liberação definirá o corte. Não será necessário haver movimentação no último dia do calendário.
+4. A competência será avaliada no primeiro dia do mês seguinte, garantindo que o último dia previsto já tenha passado.
+5. O relatório final será gerado e os itens `Menor` serão processados antes da promoção da nova referência mensal.
+6. A nova referência conterá empresas com pelo menos um registro liberado no mês fechado. Empresas sem movimentação serão removidas; empresas novas serão adicionadas.
+7. Se não for possível selecionar ou validar uma fonte de fechamento, a referência vigente será preservada e a comparação da nova competência será interrompida.
 
 ## Integração com quadro de tarefas — fluxo planejado
 
-1. Somente empresas classificadas como `Menor` geram tarefas.
-2. O título da tarefa contém empresa e competência; esse par é a chave de deduplicação.
-3. Tarefas existentes são ignoradas, inclusive quando uma execução anterior terminou parcialmente.
-4. A tarefa é criada somente com o título; outras colunas não são preenchidas.
-5. Testes automatizados e demonstrações utilizam um quadro simulado local. Um conector de API real não faz parte da etapa atual.
+As regras abaixo são propostas para uma futura integração. Nenhum quadro ou conector de API é utilizado pela implementação atual.
+
+1. Somente empresas classificadas como `Menor` gerarão tarefas.
+2. O título da tarefa conterá empresa e competência; esse par será a chave de deduplicação.
+3. Tarefas existentes serão ignoradas, inclusive quando uma execução anterior terminar parcialmente.
+4. A tarefa será criada somente com o título; outras colunas não serão preenchidas.
+5. Testes automatizados e demonstrações futuras deverão utilizar um quadro simulado local. Um conector de API real não faz parte da etapa atual.
