@@ -29,6 +29,7 @@ This repository has two equally important goals:
 - Generate a local Excel report with seven worksheets: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou`, and `Novas empresas`.
 - Discover movement and reference workbooks from explicitly configured local folders using deterministic selection rules.
 - Orchestrate a complete local reconciliation run from explicitly supplied folders, competence, and dates.
+- Run the reconciliation workflow through the installed `operations-reconciliation` command-line interface.
 - Keep local task-board simulation, monthly closing, reference archiving, and reference promotion as planned future milestones.
 
 ## Requirements
@@ -56,6 +57,18 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
+## Run a reconciliation
+
+After installing the project in the active virtual environment, run:
+
+```powershell
+operations-reconciliation reconcile --movement-dir "data/movements" --reference-dir "data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+```
+
+The evaluation date is optional. When omitted, it defaults to the cutoff date. Competence must use `YYYY-MM`; cutoff and evaluation dates must use `YYYY-MM-DD`. The input folders must contain workbooks that satisfy the documented Excel contracts. The report is written to the supplied `.xlsx` destination.
+
+See the [CLI guide](docs/cli.en.md) for argument details and exit codes.
+
 ## Run the checks
 
 ```bash
@@ -63,7 +76,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-The current implementation includes the core domain rules, Excel input and report adapters, deterministic local workbook discovery, and single-run reconciliation orchestration. Local task-board simulation and monthly close remain planned.
+The current implementation includes the core domain rules, Excel input and report adapters, deterministic local workbook discovery, single-run reconciliation orchestration, and an installable command-line interface. Local task-board simulation and monthly close remain planned.
 
 ## Documentation
 
@@ -72,6 +85,7 @@ The documentation is available in Portuguese and English:
 | Topic | Português | English |
 |---|---|---|
 | Architecture | [Arquitetura](docs/architecture.md) | [Architecture](docs/architecture.en.md) |
+| CLI | [Interface de linha de comando](docs/cli.md) | [Command-line interface](docs/cli.en.md) |
 | Business rules | [Regras de negócio](docs/business-rules.md) | [Business rules](docs/business-rules.en.md) |
 | Learning guide | [Guia de aprendizagem](docs/learning-guide.md) | [Learning guide](docs/learning-guide.en.md) |
 | Security | [Segurança e limites dos dados](docs/security.md) | [Security and data boundaries](docs/security.en.md) |
@@ -83,6 +97,7 @@ The documentation is available in Portuguese and English:
 src/operations_reconciliation/
 ├── adapters/     # Excel input, output, and discovery adapters
 ├── application/  # Reconciliation workflow orchestration
+├── cli.py        # Command-line interface
 ├── domain/       # Typed domain models
 └── services/     # Normalization, consolidation, comparison
 
@@ -131,6 +146,7 @@ Este repositório tem dois objetivos igualmente importantes:
 - Gerar localmente um relatório Excel com sete abas: `Resumo`, `Aguardando`, `Menor`, `Igual`, `Maior`, `Não pagou` e `Novas empresas`.
 - Descobrir planilhas de movimentação e referência em pastas locais configuradas explicitamente, com critérios determinísticos de seleção.
 - Orquestrar uma execução local completa a partir das pastas, competência e datas informadas, gerando o relatório Excel.
+- Executar o fluxo pelo comando de linha de comando `operations-reconciliation` instalado no ambiente Python.
 - Manter a simulação local do quadro de tarefas, o fechamento mensal, o arquivamento e a promoção da referência como etapas futuras.
 
 ## Requisitos
@@ -158,6 +174,18 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
+## Executar uma conciliação
+
+Depois de instalar o projeto no ambiente virtual ativo, execute:
+
+```powershell
+operations-reconciliation reconcile --movement-dir "data/movements" --reference-dir "data/references" --competence 2026-11 --cutoff-date 2026-11-12 --output "output/reconciliation.xlsx" --evaluation-date 2026-11-13
+```
+
+A data de avaliação é opcional. Quando omitida, assume a data de corte. A competência deve usar o formato `YYYY-MM`; as datas de corte e avaliação devem usar `YYYY-MM-DD`. As pastas de entrada precisam conter planilhas que atendam aos contratos Excel documentados. O relatório é gravado no destino `.xlsx` informado.
+
+Consulte o [guia da CLI](docs/cli.md) para detalhes dos argumentos e códigos de saída.
+
 ## Executar as verificações
 
 ```bash
@@ -165,7 +193,7 @@ python -m pytest tests -v --cov=operations_reconciliation --cov-report=term-miss
 python -m ruff check src tests
 ```
 
-A implementação atual inclui as regras centrais do domínio, os adaptadores Excel, a descoberta determinística de planilhas locais e a orquestração de uma execução completa de conciliação. A simulação do quadro e o fechamento mensal permanecem planejados.
+A implementação atual inclui as regras centrais do domínio, os adaptadores Excel, a descoberta determinística de planilhas locais, a orquestração de uma execução completa de conciliação e uma interface de linha de comando instalável. A simulação do quadro e o fechamento mensal permanecem planejados.
 
 ## Documentação
 
@@ -174,6 +202,7 @@ A documentação está disponível em português e inglês:
 | Tema | Português | English |
 |---|---|---|
 | Arquitetura | [Arquitetura](docs/architecture.md) | [Architecture](docs/architecture.en.md) |
+| CLI | [Interface de linha de comando](docs/cli.md) | [Command-line interface](docs/cli.en.md) |
 | Regras de negócio | [Regras de negócio](docs/business-rules.md) | [Business rules](docs/business-rules.en.md) |
 | Aprendizagem | [Guia de aprendizagem](docs/learning-guide.md) | [Learning guide](docs/learning-guide.en.md) |
 | Segurança | [Segurança e limites dos dados](docs/security.md) | [Security and data boundaries](docs/security.en.md) |
@@ -185,6 +214,7 @@ A documentação está disponível em português e inglês:
 src/operations_reconciliation/
 ├── adapters/     # Entrada, saída e descoberta local de planilhas Excel
 ├── application/  # Orquestração do fluxo de conciliação
+├── cli.py        # Interface de linha de comando
 ├── domain/       # Modelos tipados do domínio
 └── services/     # Normalização, consolidação e comparação
 
